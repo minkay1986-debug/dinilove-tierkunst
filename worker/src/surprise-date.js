@@ -12,15 +12,19 @@ export function berlinDateKey(date = new Date()) {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
+export function isValidDateKey(dateKey) {
+  if (typeof dateKey !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return false;
+  const date = new Date(`${dateKey}T12:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === dateKey;
+}
+
 /**
- * Returns the priority category for a date key (YYYY-MM-DD).
- * The database should return only the row for this exact key.
- * Anniversary takes precedence over the monthly 16th surprise.
+ * Priority for a given Berlin calendar date.
+ * Anniversary outranks monthly surprise; birthday and Christmas also outrank
+ * the monthly surprise if they ever coincide.
  */
 export function surpriseTypeForDate(dateKey) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-    throw new TypeError("dateKey must be YYYY-MM-DD");
-  }
+  if (!isValidDateKey(dateKey)) throw new TypeError("dateKey must be a valid YYYY-MM-DD date");
   const [, month, day] = dateKey.split("-");
   if (month === "02" && day === "16") return "anniversary";
   if (month === "10" && day === "30") return "birthday";
