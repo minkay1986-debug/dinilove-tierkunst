@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f1e8">
+  <meta name="description" content="Eine persönliche Galerie für detailreiche Tierporträts und Buntstiftzeichnungen.">
+  <title>DiniLove Atelier – Tierkunst in Buntstift</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="announcement">Mit Geduld gezeichnet. Mit Gefühl gesammelt.</div>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="DiniLove Atelier Startseite">
+      <span class="brand-mark" aria-hidden="true">d.</span>
+      <span><strong>DiniLove</strong><small>ATELIER · TIERKUNST</small></span>
+    </a>
+    <nav aria-label="Hauptnavigation">
+      <a href="#galerie">Galerie</a>
+      <a href="#auftragsarbeiten">Auftragsarbeiten</a>
+      <a href="#atelier">Über das Atelier</a>
+    </nav>
+    <a class="nav-cta" href="#kontakt">Kontakt aufnehmen <span aria-hidden="true">↗</span></a>
+    <button class="menu-toggle" aria-label="Menü öffnen" aria-expanded="false">☰</button>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> KLEINE DETAILS. GROSSE GEFÜHLE.</p>
+        <h1>Tierporträts,<br><em>Strich für Strich.</em></h1>
+        <p class="hero-text">Eine kleine Galerie für Kunst mit Geduld, Charakter und ganz viel Liebe zum Tier.</p>
+        <div class="hero-actions">
+          <a class="button button-dark" href="#galerie">Werke entdecken <span aria-hidden="true">↓</span></a>
+          <a class="text-link" href="#auftragsarbeiten">Ein Porträt anfragen <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="hero-note"><span class="note-star">✳</span><span><strong>Handgezeichnete Originale</strong><small>Jedes Werk erzählt seine eigene Geschichte.</small></span></div>
+      </div>
+      <div class="hero-art">
+        <div class="art-frame">
+          <div class="art-placeholder" aria-label="Platzhalter für ein echtes Originalkunstwerk">
+            <span class="placeholder-icon" aria-hidden="true">✳</span>
+            <strong>Dein Originalwerk</strong>
+            <small>Hier kommt eine echte Zeichnung<br>der Künstlerin hin.</small>
+          </div>
+          <div class="frame-caption"><span>01 / AUS DEM ATELIER</span><span>Original · Buntstift</span></div>
+        </div>
+        <div class="floating-note"><span class="tiny-sun">✳</span><span>Mit Liebe<br>von Hand gemacht</span></div>
+        <div class="hero-side-label">KUNST, DIE NÄHE SCHAFFT</div>
+      </div>
+    </section>
+
+    <section class="intro-strip">
+      <span>ORIGINALZEICHNUNGEN</span><i>✳</i><span>FEINE BUNTSTIFTDETAILS</span><i>✳</i><span>INDIVIDUELLE TIERPORTRÄTS</span>
+    </section>
+
+    <section class="gallery section" id="galerie">
+      <div class="section-heading">
+        <div><p class="eyebrow">DIE KUNSTGALERIE</p><h2>Jedes Tier hat <em>seinen Blick.</em></h2></div>
+        <p>Entdecke die Werke in Ruhe. Jedes Bild wird erst dann gezeigt, wenn das echte Original der Künstlerin hinterlegt ist.</p>
+      </div>
+      <div class="filter-row" role="group" aria-label="Galeriefilter">
+        <button class="filter active" data-filter="all">Alle Werke <span>00</span></button>
+        <button class="filter" data-filter="wild">Wildtiere</button>
+        <button class="filter" data-filter="liebling">Lieblingstiere</button>
+        <button class="filter" data-filter="auftrag">Auftragsarbeiten</button>
+      </div>
+      <div class="gallery-grid" id="gallery-grid">
+        <article class="empty-work" data-category="wild">
+          <div class="empty-art"><span>✳</span><small>PLATZ FÜR EIN<br>ECHTES ORIGINAL</small></div>
+          <div class="work-info"><div><h3>Ein Werk kommt bald</h3><p>Wildtiere · Buntstift</p></div><span class="work-number">01</span></div>
+        </article>
+        <article class="empty-work" data-category="liebling">
+          <div class="empty-art empty-art-two"><span>✳</span><small>PLATZ FÜR EIN<br>ECHTES ORIGINAL</small></div>
+          <div class="work-info"><div><h3>Ein Werk kommt bald</h3><p>Lieblingstiere · Buntstift</p></div><span class="work-number">02</span></div>
+        </article>
+        <article class="empty-work" data-category="auftrag">
+          <div class="empty-art empty-art-three"><span>✳</span><small>PLATZ FÜR EIN<br>ECHTES ORIGINAL</small></div>
+          <div class="work-info"><div><h3>Dein Tier als Porträt</h3><p>Individuelle Auftragsarbeit</p></div><span class="work-number">03</span></div>
+        </article>
+      </div>
+      <p class="gallery-footnote"><span>✳</span> Die Galerie wird mit echten Werken ergänzt – keine KI-Tierbilder, keine erfundenen Originale.</p>
+    </section>
+
+    <section class="commission section" id="auftragsarbeiten">
+      <div class="commission-image">
+        <div class="paper-note"><span>DEINE ERINNERUNG.</span><strong>Als Kunstwerk<br>für immer.</strong><i>✳</i></div>
+        <div class="pencil pencil-one"></div><div class="pencil pencil-two"></div><div class="pencil pencil-three"></div>
+      </div>
+      <div class="commission-copy">
+        <p class="eyebrow">ETWAS GANZ PERSÖNLICHES</p>
+        <h2>Ein vertrauter Blick.<br><em>Für immer festgehalten.</em></h2>
+        <p>Manche Tiere sind Familie. Aus einem Foto kann ein individuelles Buntstiftporträt entstehen – mit viel Zeit für Fell, Ausdruck und die kleinen Eigenheiten, die dein Tier unverwechselbar machen.</p>
+        <a class="button button-dark" href="#kontakt">Auftragsarbeit anfragen <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section class="atelier section" id="atelier">
+      <div class="atelier-heading"><p class="eyebrow">HINTER DEN FARBEN</p><h2>Mit Ruhe. Mit Gefühl.<br><em>Mit jedem einzelnen Strich.</em></h2></div>
+      <div class="atelier-body"><p>Hier entsteht ein persönlicher Einblick in das Atelier, die Materialien und die Liebe zum Zeichnen. Sobald die Künstlerin ihre Geschichte teilen möchte, findet sie hier ihren Platz.</p><div class="atelier-signature">DiniLove <span>✳</span></div></div>
+    </section>
+
+    <section class="contact section" id="kontakt">
+      <div><p class="eyebrow">DU HAST EINEN WUNSCH?</p><h2>Erzähl mir davon.</h2><p>Fragen zu einem Werk oder Interesse an einem persönlichen Tierporträt? Schreib eine Nachricht.</p></div>
+      <div class="contact-card"><p class="contact-label">KONTAKT</p><p class="contact-hint">Die Kontaktadresse wird vor Veröffentlichung ergänzt.</p><a class="button button-light" href="mailto:">E-Mail-Adresse ergänzen <span aria-hidden="true">↗</span></a><small>Bitte vor dem Livegang eine echte Kontaktadresse eintragen.</small></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a class="brand brand-footer" href="#"><span class="brand-mark">d.</span><span><strong>DiniLove</strong><small>ATELIER · TIERKUNST</small></span></a>
+    <p>Mit Liebe gestaltet. Mit echten Werken gefüllt.</p>
+    <div><a href="#kontakt">Kontakt</a><a href="#" aria-label="Impressum ergänzen">Impressum</a><a href="#" aria-label="Datenschutz ergänzen">Datenschutz</a></div>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
