@@ -43,42 +43,46 @@ function render(){document.querySelector("#works").innerHTML=works.map(w=>'<arti
 function splash(){
  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
  document.querySelector(".water-splash")?.remove();
- const el=document.createElement("div"),cv=document.createElement("canvas");
- el.className="water-splash";el.setAttribute("aria-hidden","true");el.append(cv);document.body.append(el);
- const gl=cv.getContext("webgl",{alpha:true,antialias:true,premultipliedAlpha:false});
- if(!gl){el.remove();return}
+ const el=document.createElement("div"),cv=document.createElement("canvas");el.className="water-splash";el.setAttribute("aria-hidden","true");el.append(cv);document.body.append(el);
+ const gl=cv.getContext("webgl",{alpha:true,antialias:true,premultipliedAlpha:false});if(!gl){el.remove();return}
  const vs="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
- const fs="precision highp float;uniform vec2 res;uniform float time;uniform vec2 center;"+
- "float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}"+
- "float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}"+
- "void main(){vec2 uv=gl_FragCoord.xy/res;vec2 q=(uv-center)*vec2(res.x/res.y,1.);float t=time;"+
- "float impact=smoothstep(0.,.16,t);float spread=mix(.018,.47,1.-exp(-t*20.));spread*=1.+.035*sin(t*28.)*exp(-t*3.);"+
- "float ang=atan(q.y,q.x);float n=noise(vec2(ang*4.2,t*2.));float n2=noise(vec2(ang*11.7+3.,t*1.1));"+
- "float spikes=pow(max(0.,sin(ang*7.+1.)),10.)*.19+pow(max(0.,sin(ang*13.+2.)),16.)*.11;"+
- "float radius=spread*(.72+.12*sin(ang*3.+.8)+.08*sin(ang*5.-1.2)+.08*(n-.5)+.055*(n2-.5)+spikes);"+
- "float d=length(q)-radius;"+
- "float drips=0.;for(int i=0;i<7;i++){float fi=float(i);float xx=(fi-3.)*.105;float startY=-radius*.65;float len=max(0.,t-.35-fi*.035)*(.55+ .12*sin(fi*5.));"+
- "vec2 dp=vec2(q.x-xx,q.y-startY+len*.42);float w=.012+ .009*exp(-len*2.);float body=length(vec2(dp.x, max(0.,abs(dp.y)-len*.45)))-w;"+
- "float drop=length(q-vec2(xx,startY-len))-w*1.6;drips=min(drips,min(body,drop));}"+
- "float fluid=min(d,drips);float edge=1.-smoothstep(-.012,.012,fluid);"+
- "float alive= smoothstep(0.,.045,t)*(1.-smoothstep(3.7,4.3,t));"+
- "vec2 light=normalize(vec2(-.5,.7));float bevel=1.-smoothstep(.004,.035,abs(fluid));"+
- "float shade=clamp(.35+.35*dot(normalize(q+vec2(.001)),light),0.,1.);"+
- "float highlight=pow(max(0.,1.-abs(fluid+.018)*35.),3.);"+
- "float interior=1.-smoothstep(-.12,.01,fluid);"+
- "vec3 col=mix(vec3(.025,.25,.39),vec3(.35,.82,.96),clamp(.55+shade*.5,0.,1.));"+
- "col=mix(col,vec3(.9,.98,1.),highlight*.95);col=mix(col,vec3(.02,.16,.25),bevel*.35);"+
- "float alpha=clamp(max(edge*.85,interior*.55)*alive,0.,.94);"+
- "gl_FragColor=vec4(col,alpha);}";
- function shader(type,src){const sh=gl.createShader(type);gl.shaderSource(sh,src);gl.compileShader(sh);if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)){console.warn(gl.getShaderInfoLog(sh));return null}return sh}
- const v=shader(gl.VERTEX_SHADER,vs),f=shader(gl.FRAGMENT_SHADER,fs);if(!v||!f){el.remove();return}
- const pr=gl.createProgram();gl.attachShader(pr,v);gl.attachShader(pr,f);gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){el.remove();return}
- gl.useProgram(pr);const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
- const loc=gl.getAttribLocation(pr,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
- const res=gl.getUniformLocation(pr,"res"),tim=gl.getUniformLocation(pr,"time"),ctr=gl.getUniformLocation(pr,"center");
- let start=performance.now(),raf;
- function frame(now){const sec=(now-start)/1000,dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(innerHeight*dpr);cv.style.width="100%";cv.style.height="100%";gl.viewport(0,0,cv.width,cv.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform2f(res,cv.width,cv.height);gl.uniform1f(tim,sec);gl.uniform2f(ctr,.5,.60);gl.drawArrays(gl.TRIANGLES,0,6);if(sec<4.3)raf=requestAnimationFrame(frame);else el.remove()}
- raf=requestAnimationFrame(frame);setTimeout(()=>{cancelAnimationFrame(raf);el.remove()},4500);
+ const fs=`precision highp float;uniform vec2 res;uniform float time;uniform vec2 center;
+ float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+ float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
+ void main(){vec2 uv=gl_FragCoord.xy/res;vec2 q=(uv-center)*vec2(res.x/res.y,1.);float t=time;
+ // A true time-varying radial impact: a tiny bead strikes, spreads fast, overshoots, then collapses into gravity-driven rivulets.
+ float hit=1.-smoothstep(0.,.10,t);float spread= .018 + .48*(1.-exp(-t*17.))*exp(-max(0.,t-.24)*1.15);
+ float angle=atan(q.y,q.x);float n=noise(vec2(angle*7.0,t*3.1));float n2=noise(vec2(angle*17.0-t*1.8,4.));
+ float wave=sin(angle*9.+t*21.)*.025*exp(-t*2.3)+sin(angle*17.-t*13.)*.018*exp(-t*2.);
+ float tendrils=pow(max(0.,sin(angle*5.+.7)),9.)*.20+pow(max(0.,sin(angle*11.+2.1)),15.)*.12;
+ float rad=spread*(.82+.12*sin(angle*3.+.8)+.07*sin(angle*8.-1.)+.12*(n-.5)+.06*(n2-.5)+tendrils+wave);
+ float d=length(q)-rad;
+ // The initial thin shock ring expands out from the point of impact and quickly loses energy.
+ float ringR=.018+t*.88;float ring=abs(length(q)-ringR);float ringA=(1.-smoothstep(.004,.027,ring))*exp(-t*8.)*smoothstep(0.,.025,t);
+ float body=smoothstep(.012,-.012,d);
+ // Irregular vertical rivulets grow only after the splash has hit, then elongate and thin under gravity.
+ float drips=1e3;
+ for(int i=0;i<9;i++){float fi=float(i);float xx=(fi-4.)*.075+sin(fi*4.)*.018;float delay=.22+mod(fi*7.,5.)*.035;float age=max(0.,t-delay);float len=min(.60,age*(.42+mod(fi*3.,4.)*.12));float sway=sin(age*3.+fi)*.012;
+ vec2 p=q-vec2(xx+sway,-.06-len*.46);float width=(.009+.004*sin(fi*8.))*(1.-.45*clamp(age,0.,1.));float seg=length(vec2(p.x,max(0.,abs(p.y)-len*.48)))-width;float tip=length(q-vec2(xx+sway,-.06-len))-width*1.4;drips=min(drips,min(seg,tip));}
+ float dripAlpha=(1.-smoothstep(-.006,.012,drips))*smoothstep(.17,.35,t);
+ float fluid=max(body,dripAlpha*.9);float alive=smoothstep(0.,.035,t)*(1.-smoothstep(3.8,4.35,t));
+ // Glossy, refractive-looking liquid edge: bright upper rim, deep blue lower rim, translucent core.
+ float rim=1.-smoothstep(.003,.028,abs(d));float inner=1.-smoothstep(-.12,.005,d);
+ float shade=clamp(.42+.34*dot(normalize(q+vec2(.001)),normalize(vec2(-.6,.8))),0.,1.);
+ vec3 col=mix(vec3(.015,.12,.20),vec3(.12,.55,.76),shade);
+ col=mix(col,vec3(.73,.94,1.),rim*.82);col=mix(col,vec3(.97,1.,1.),pow(rim,4.)*.8);
+ col=mix(col,vec3(.025,.22,.34),smoothstep(-.02,.012,d)*.4);
+ float alpha=clamp((fluid*.7+rim*.7+ringA*.8)*alive,0.,.92);
+ // Fast spreading splash briefly has a separate translucent shock rim; no fixed opaque blob.
+ alpha*=smoothstep(0.,.025,t);alpha*=1.-hit*.45;
+ gl_FragColor=vec4(col,alpha);
+ }`;
+ function sh(type,src){const a=gl.createShader(type);gl.shaderSource(a,src);gl.compileShader(a);if(!gl.getShaderParameter(a,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(a));return null}return a}
+ const v=sh(gl.VERTEX_SHADER,vs),f=sh(gl.FRAGMENT_SHADER,fs);if(!v||!f){el.remove();return}const pr=gl.createProgram();gl.attachShader(pr,v);gl.attachShader(pr,f);gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(pr));el.remove();return}
+ gl.useProgram(pr);const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const loc=gl.getAttribLocation(pr,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+ const res=gl.getUniformLocation(pr,"res"),tim=gl.getUniformLocation(pr,"time"),ctr=gl.getUniformLocation(pr,"center");let start=performance.now(),raf;
+ function frame(now){let sec=(now-start)/1000,dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(innerHeight*dpr);cv.style.width="100%";cv.style.height="100%";gl.viewport(0,0,cv.width,cv.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform2f(res,cv.width,cv.height);gl.uniform1f(tim,sec);gl.uniform2f(ctr,.5,.60);gl.drawArrays(gl.TRIANGLES,0,6);if(sec<4.35)raf=requestAnimationFrame(frame);else el.remove()}
+ raf=requestAnimationFrame(frame);setTimeout(()=>{cancelAnimationFrame(raf);el.remove()},4550)
 }document.querySelector("#art-form").addEventListener("submit",e=>{e.preventDefault();const file=document.querySelector("#image").files[0];if(file&&!file.type.startsWith("image/")){return;}const src=file?URL.createObjectURL(file):"";works.unshift({id:nextId++,title:document.querySelector("#title").value.trim(),category:document.querySelector("#category").selectedOptions[0].textContent,description:document.querySelector("#description").value.trim()||"Keine Beschreibung.",src});render();const status=document.querySelector("#status");status.textContent="Demo-Werk hinzugefügt. Keine Daten wurden hochgeladen.";status.classList.add("show");splash();e.target.reset();});
 document.querySelector("#works").addEventListener("click",e=>{const id=Number(e.target.dataset.delete);if(!id)return;const idx=works.findIndex(w=>w.id===id);if(idx>=0){if(works[idx].src)URL.revokeObjectURL(works[idx].src);works.splice(idx,1);render();}});
 document.querySelector("#save-surprise").addEventListener("click",()=>{document.querySelector("#surprise").textContent="„"+document.querySelector("#surprise-input").value+"“";});
