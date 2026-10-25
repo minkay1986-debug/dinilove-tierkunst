@@ -1,3 +1,5 @@
+import { getTodaySurprise } from "./surprise-repository.js";
+
 /**
  * DiniLove private-ateliers API — Cloudflare Access gate scaffold.
  *
@@ -158,7 +160,21 @@ export default {
       }, 200, cors);
     }
 
-    // All content and mutation routes remain disabled until storage and
+    if (url.pathname === "/api/surprise/today" && request.method === "GET") {
+      const identity = await verifyAccessIdentity(request, env);
+      if (!identity) return json({ error: "unauthorized" }, 401, cors);
+      if (!env.DB) {
+        return json({ error: "storage_not_configured" }, 503, cors);
+      }
+      try {
+        const surprise = await getTodaySurprise(env.DB);
+        return json(surprise, 200, cors);
+      } catch {
+        return json({ error: "surprise_unavailable" }, 503, cors);
+      }
+    }
+
+    // All other content and mutation routes remain disabled until storage and
     // authorization tests have been completed.
     if (url.pathname.startsWith("/api/")) {
       return json({
