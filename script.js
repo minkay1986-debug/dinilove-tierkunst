@@ -15,3 +15,30 @@ document.querySelectorAll('.filter').forEach(button => {
     });
   });
 });
+
+
+/* Öffnet nur die Vorschau; echte Konten werden erst nach Einrichtung sicherer Anmeldung aktiviert. */
+const privateModal = document.querySelector('#private-modal');
+const modalBackdrop = document.querySelector('.modal-backdrop');
+const openPrivate = document.querySelector('.secret-heart');
+const closePrivate = document.querySelector('.modal-close');
+const modalOk = document.querySelector('.modal-ok');
+function showPrivateModal() {
+  if (!privateModal || !modalBackdrop) return;
+  privateModal.hidden = false;
+  modalBackdrop.hidden = false;
+  closePrivate?.focus();
+}
+function hidePrivateModal() {
+  if (!privateModal || !modalBackdrop) return;
+  privateModal.hidden = true;
+  modalBackdrop.hidden = true;
+  openPrivate?.focus();
+}
+openPrivate?.addEventListener('click', showPrivateModal);
+closePrivate?.addEventListener('click', hidePrivateModal);
+modalOk?.addEventListener('click', hidePrivateModal);
+modalBackdrop?.addEventListener('click', hidePrivateModal);
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && privateModal && !privateModal.hidden) hidePrivateModal();
+});

@@ -1,0 +1,11 @@
+# DiniLove Worker scaffold — not deployed.
+# Configure ALLOWED_ORIGINS as a Worker variable only after choosing the
+# exact production origin. Never add API secrets or passwords to this file.
+
+name = "dinilove-atelier-api"
+main = "src/index.js"
+compatibility_date = "2026-10-25"
+
+[vars]
+# Example only; replace with the exact GitHub Pages origin before deployment.
+# ALLOWED_ORIGINS = "https://minkay1986-debug.github.io"
