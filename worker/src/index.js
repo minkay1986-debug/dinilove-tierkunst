@@ -117,7 +117,7 @@ async function verifyAccessIdentity(request, env) {
 
   const email = typeof claims.email === "string" ? claims.email.trim().toLowerCase() : "";
   const allowedEmail = env.ADMIN_EMAIL.trim().toLowerCase();
-  if (!email || email !== allowedEmail || claims.email_verified !== true) return null;
+  if (!email || email !== allowedEmail) return null;
 
   return { email };
 }
