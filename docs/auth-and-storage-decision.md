@@ -16,3 +16,6 @@ Cloudflare Access kann E-Mail-One-Time-PINs anbieten und vor einem Worker authen
 - Keine Zahlung, kein Upgrade, keine Zahlungsmethode erforderlich oder eingerichtet.
 - Die E-Mail-Adresse wird nicht in diesen öffentlichen Dateien wiederholt.
 - Die Datumslogik behandelt den 16. Februar als Jahrestag, 30. Oktober als Geburtstag und 24. Dezember als Weihnachten. Jahrestag hat Vorrang vor der monatlichen Überraschung.
+
+## Access-JWT-Prüfung im Testzweig
+Der Worker-Scaffold prüft den Access-Assertion-Header kryptografisch (RS256), validiert Issuer/Audience/Ablaufzeit und erlaubt nur die konfigurierte, verifizierte Admin-E-Mail. `/api/admin/me` ist der einzige vorläufige Identitäts-Endpunkt. Der Worker ist **noch nicht deployt** und muss hinter Cloudflare Access betrieben werden; ein direkter Zugriff ohne Access-Gate ist nicht als geschützt anzusehen. Content-, Upload- und Mutationsrouten bleiben geschlossen.
