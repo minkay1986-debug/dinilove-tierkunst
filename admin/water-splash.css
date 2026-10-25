@@ -1,0 +1,86 @@
+/*
+ * Only load this stylesheet inside the authenticated admin UI.
+ * The effect simulates clear water hitting the inside of glass.
+ */
+[data-admin-surface] { position: relative; isolation: isolate; }
+.admin-water-splash {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
+  animation: water-glass-clear 1.08s ease-out forwards;
+  background: radial-gradient(ellipse at 52% 43%, #eafaff70 0, #d7f4ff25 12%, transparent 44%);
+}
+.water-impact {
+  position: absolute;
+  left: 52%;
+  top: 43%;
+  width: 5rem;
+  height: 5rem;
+  border: 2px solid #f8fdffcc;
+  border-radius: 47% 53% 52% 48%;
+  transform: translate(-50%, -50%) scale(.15);
+  box-shadow: 0 0 0 7px #d9f4ff6b, inset 0 0 14px #ffffffb0;
+  animation: water-impact-burst .45s cubic-bezier(.1,.75,.25,1) forwards;
+}
+.water-drop {
+  position: absolute;
+  left: 52%;
+  top: 43%;
+  width: 10px;
+  height: 15px;
+  border: 1px solid #ffffffed;
+  border-radius: 60% 40% 58% 42%;
+  background: linear-gradient(135deg, #ffffffc9, #bdeeff55 65%, #ffffffa8);
+  box-shadow: 1px 2px 3px #5d99b326;
+  opacity: 0;
+  animation: water-flick .65s ease-out forwards;
+}
+.drop-1 { --dx: -130px; --dy: -68px; animation-delay: .02s; }
+.drop-2 { --dx: 105px; --dy: -91px; animation-delay: .03s; }
+.drop-3 { --dx: 155px; --dy: 18px; animation-delay: .04s; }
+.drop-4 { --dx: -92px; --dy: 72px; animation-delay: .05s; }
+.drop-5 { --dx: 26px; --dy: -128px; animation-delay: .06s; }
+.water-trail {
+  position: absolute;
+  top: 40%;
+  width: 3px;
+  height: 0;
+  border-radius: 50%;
+  background: linear-gradient(#ffffffd9, #bceeff88 65%, #ffffffa8);
+  box-shadow: 1px 0 2px #7ab8d333;
+  animation: water-run  .68s .18s ease-in forwards;
+}
+.trail-1 { left: 29%; --trail: 95px; }
+.trail-2 { left: 42%; --trail: 145px; animation-delay: .12s; }
+.trail-3 { left: 56%; --trail: 115px; }
+.trail-4 { left: 68%; --trail: 170px; animation-delay: .15s; }
+.trail-5 { left: 79%; --trail: 82px; animation-delay: .2s; }
+@keyframes water-impact-burst {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.15); }
+  45% { opacity: 1; }
+  100% { opacity: .55; transform: translate(-50%,-50%) scale(2.2); }
+}
+@keyframes water-flick {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.4); }
+  12% { opacity: .95; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.7); }
+}
+@keyframes water-run {
+  0% { height: 0; opacity: 0; }
+  18% { opacity: .9; }
+  75% { height: var(--trail); opacity: .75; }
+  100% { height: calc(var(--trail) + 12px); opacity: 0; }
+}
+@keyframes water-glass-clear {
+  0% { opacity: 0; }
+  16% { opacity: 1; }
+  72% { opacity: .9; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-water-splash, .admin-water-splash * { animation: none !important; }
+  .admin-water-splash { display: none; }
+}
