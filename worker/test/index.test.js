@@ -12,7 +12,7 @@ test("health reports scaffold and private features disabled", async () => {
   assert.equal(response.status, 200);
   const body = await response.json();
   assert.equal(body.ok, true);
-  assert.equal(body.mode, "scaffold");
+  assert.equal(body.mode, "access-gated-scaffold");
   assert.equal(body.privateFeaturesEnabled, false);
   assert.equal(response.headers.get("cache-control"), "no-store");
 });
@@ -63,4 +63,26 @@ test("unknown paths return 404", async () => {
     env
   );
   assert.equal(response.status, 404);
+});
+
+test("admin identity route fails closed when Access configuration is absent", async () => {
+  const response = await worker.fetch(
+    new Request("https://worker.example/api/admin/me", {
+      headers: { Origin: "https://minkay1986-debug.github.io" },
+    }),
+    env
+  );
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).error, "unauthorized");
+});
+
+test("private content routes remain disabled even with no identity", async () => {
+  const response = await worker.fetch(
+    new Request("https://worker.example/api/surprise/today", {
+      headers: { Origin: "https://minkay1986-debug.github.io" },
+    }),
+    env
+  );
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "not_configured");
 });
