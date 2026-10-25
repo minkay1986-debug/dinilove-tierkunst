@@ -63,7 +63,7 @@ function splash(){
  "float fluid=min(d,drips);float edge=1.-smoothstep(-.012,.012,fluid);"+
  "float alive= smoothstep(0.,.045,t)*(1.-smoothstep(3.7,4.3,t));"+
  "vec2 light=normalize(vec2(-.5,.7));float bevel=1.-smoothstep(.004,.035,abs(fluid));"+
- "float shade=clamp(.5-dot(normalize(vec2(dFdx(fluid),dFdy(fluid))),light)*.5,0.,1.);"+
+ "float shade=clamp(.35+.35*dot(normalize(q+vec2(.001)),light),0.,1.);"+
  "float highlight=pow(max(0.,1.-abs(fluid+.018)*35.),3.);"+
  "float interior=1.-smoothstep(-.12,.01,fluid);"+
  "vec3 col=mix(vec3(.025,.25,.39),vec3(.35,.82,.96),clamp(.55+shade*.5,0.,1.));"+
