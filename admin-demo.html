@@ -74,7 +74,7 @@ function splash(){
    // Brief follow-up pushes add a torn, irregular edge as the paint spreads.
    setTimeout(()=>{if(!alive)return;fluid.splat(x-55,y-20,-420,-100,"#8de3f8");fluid.splat(x+50,y-15,460,-80,"#2aa9d8");},95);
  }).catch(err=>{console.error("Fluid splash could not start:",err);remove()});
- setTimeout(()=>{clearTimeout(watchdog);remove()},4300);
+ setTimeout(()=>{if(alive)cv.style.opacity="0"},3650);setTimeout(()=>{clearTimeout(watchdog);remove()},4300);
 }document.querySelector("#art-form").addEventListener("submit",e=>{e.preventDefault();const file=document.querySelector("#image").files[0];if(file&&!file.type.startsWith("image/")){return;}const src=file?URL.createObjectURL(file):"";works.unshift({id:nextId++,title:document.querySelector("#title").value.trim(),category:document.querySelector("#category").selectedOptions[0].textContent,description:document.querySelector("#description").value.trim()||"Keine Beschreibung.",src});render();const status=document.querySelector("#status");status.textContent="Demo-Werk hinzugefügt. Keine Daten wurden hochgeladen.";status.classList.add("show");splash();e.target.reset();});
 document.querySelector("#works").addEventListener("click",e=>{const id=Number(e.target.dataset.delete);if(!id)return;const idx=works.findIndex(w=>w.id===id);if(idx>=0){if(works[idx].src)URL.revokeObjectURL(works[idx].src);works.splice(idx,1);render();}});
 document.querySelector("#save-surprise").addEventListener("click",()=>{document.querySelector("#surprise").textContent="„"+document.querySelector("#surprise-input").value+"“";});
