@@ -38,10 +38,17 @@
       </div>
       <div class="hero-art">
         <div class="art-frame">
-          <div class="art-placeholder" aria-label="Platzhalter für ein echtes Originalkunstwerk">
-            <span class="placeholder-icon" aria-hidden="true">✳</span>
-            <strong>Dein Originalwerk</strong>
-            <small>Hier kommt eine echte Zeichnung<br>der Künstlerin hin.</small>
+          <div class="art-placeholder portrait-upload-area" id="portrait-upload-area" aria-label="Bereich für ein eigenes Tierporträt">
+            <img class="portrait-preview" id="portrait-preview" alt="Vorschau des ausgewählten Tierporträts" hidden>
+            <div class="portrait-empty" id="portrait-empty">
+              <span class="placeholder-icon" aria-hidden="true">✳</span>
+              <strong>Dein Kunstwerk beginnt hier</strong>
+              <small>Wähle ein eigenes Tierporträt<br>für diese Vorschau aus.</small>
+            </div>
+            <input id="portrait-file" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Tierporträt auswählen">
+            <button class="portrait-upload-button" id="portrait-upload-button" type="button">Porträt auswählen <span aria-hidden="true">↗</span></button>
+            <button class="portrait-reset-button" id="portrait-reset-button" type="button" hidden>Bild entfernen</button>
+            <small class="portrait-storage-note" id="portrait-storage-note">Wird nur in diesem Browser gespeichert.</small>
           </div>
           <div class="frame-caption"><span>01 / AUS DEM ATELIER</span><span>Original · Buntstift</span></div>
         </div>
