@@ -10,7 +10,7 @@
 
 ## Zielarchitektur
 1. Statische Galerie bleibt öffentlich und ohne Login erreichbar.
-2. Eine einzige Atelier-Benutzerin; keine Registrierung und keine öffentliche Kontoerstellung.
+2. Genau eine zugelassene Atelier-Benutzerin: die vom Betreiber angegebene E-Mail-Adresse wird ausschließlich in der privaten Worker-Konfiguration hinterlegt. Sie wird nicht in öffentliche Repository-Dateien geschrieben. Keine Registrierung und keine öffentliche Kontoerstellung.
 3. Private Verwaltungs-API prüft die Anmeldung serverseitig bei **jeder** geschützten Anfrage.
 4. Cloudinary-Signaturen werden ausschließlich serverseitig erstellt; API Secret wird als Worker Secret hinterlegt, niemals in HTML/JavaScript oder Git.
 5. Galerie-Metadaten und Überraschungszuordnung benötigen einen dauerhaften Speicher mit restriktiven Berechtigungen.
@@ -19,6 +19,7 @@
 8. Jede Upload-, Bearbeiten- und Löschaktion wird serverseitig autorisiert. Dateityp, Dateigröße und Eingaben werden geprüft.
 
 ## Vor Implementierung echter Login-Sessions
+- Die zugelassene Admin-E-Mail privat als Worker-Secret/-Konfiguration setzen; niemals die konkrete Adresse in öffentliche Dateien oder Logs schreiben.
 - Authentifizierungsverfahren und sichere Passwort-/E-Mail-Wiederherstellung auswählen; keine selbst erfundene, ungetestete Passwort-Kryptografie.
 - Session-Cookies: `HttpOnly`, `Secure`, angemessene `SameSite`-Einstellung, Ablauf und Widerruf; CSRF-Schutz für schreibende Anfragen.
 - Rate-Limits und generische Fehlermeldungen gegen Passwort-Raten und Konto-Erkennung.
