@@ -43,46 +43,38 @@ function render(){document.querySelector("#works").innerHTML=works.map(w=>'<arti
 function splash(){
  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
  document.querySelector(".water-splash")?.remove();
- const el=document.createElement("div"),cv=document.createElement("canvas");el.className="water-splash";el.setAttribute("aria-hidden","true");el.append(cv);document.body.append(el);
- const gl=cv.getContext("webgl",{alpha:true,antialias:true,premultipliedAlpha:false});if(!gl){el.remove();return}
- const vs="attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
- const fs=`precision highp float;uniform vec2 res;uniform float time;uniform vec2 center;
- float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
- float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
- void main(){vec2 uv=gl_FragCoord.xy/res;vec2 q=(uv-center)*vec2(res.x/res.y,1.);float t=time;
- // A true time-varying radial impact: a tiny bead strikes, spreads fast, overshoots, then collapses into gravity-driven rivulets.
- float hit=1.-smoothstep(0.,.10,t);float spread= .018 + .48*(1.-exp(-t*17.))*exp(-max(0.,t-.24)*1.15);
- float angle=atan(q.y,q.x);float n=noise(vec2(angle*7.0,t*3.1));float n2=noise(vec2(angle*17.0-t*1.8,4.));
- float wave=sin(angle*9.+t*21.)*.025*exp(-t*2.3)+sin(angle*17.-t*13.)*.018*exp(-t*2.);
- float tendrils=pow(max(0.,sin(angle*5.+.7)),9.)*.20+pow(max(0.,sin(angle*11.+2.1)),15.)*.12;
- float rad=spread*(.82+.12*sin(angle*3.+.8)+.07*sin(angle*8.-1.)+.12*(n-.5)+.06*(n2-.5)+tendrils+wave);
- float d=length(q)-rad;
- // The initial thin shock ring expands out from the point of impact and quickly loses energy.
- float ringR=.018+t*.88;float ring=abs(length(q)-ringR);float ringA=(1.-smoothstep(.004,.027,ring))*exp(-t*8.)*smoothstep(0.,.025,t);
- float body=smoothstep(.012,-.012,d);
- // Irregular vertical rivulets grow only after the splash has hit, then elongate and thin under gravity.
- float drips=1e3;
- for(int i=0;i<9;i++){float fi=float(i);float xx=(fi-4.)*.075+sin(fi*4.)*.018;float delay=.22+mod(fi*7.,5.)*.035;float age=max(0.,t-delay);float len=min(.60,age*(.42+mod(fi*3.,4.)*.12));float sway=sin(age*3.+fi)*.012;
- vec2 p=q-vec2(xx+sway,-.06-len*.46);float width=(.009+.004*sin(fi*8.))*(1.-.45*clamp(age,0.,1.));float seg=length(vec2(p.x,max(0.,abs(p.y)-len*.48)))-width;float tip=length(q-vec2(xx+sway,-.06-len))-width*1.4;drips=min(drips,min(seg,tip));}
- float dripAlpha=(1.-smoothstep(-.006,.012,drips))*smoothstep(.17,.35,t);
- float fluid=max(body,dripAlpha*.9);float alive=smoothstep(0.,.035,t)*(1.-smoothstep(3.8,4.35,t));
- // Glossy, refractive-looking liquid edge: bright upper rim, deep blue lower rim, translucent core.
- float rim=1.-smoothstep(.003,.028,abs(d));float inner=1.-smoothstep(-.12,.005,d);
- float shade=clamp(.42+.34*dot(normalize(q+vec2(.001)),normalize(vec2(-.6,.8))),0.,1.);
- vec3 col=mix(vec3(.015,.12,.20),vec3(.12,.55,.76),shade);
- col=mix(col,vec3(.73,.94,1.),rim*.82);col=mix(col,vec3(.97,1.,1.),pow(rim,4.)*.8);
- col=mix(col,vec3(.025,.22,.34),smoothstep(-.02,.012,d)*.4);
- float alpha=clamp((fluid*.7+rim*.7+ringA*.8)*alive,0.,.92);
- // Fast spreading splash briefly has a separate translucent shock rim; no fixed opaque blob.
- alpha*=smoothstep(0.,.025,t);alpha*=1.-hit*.45;
- gl_FragColor=vec4(col,alpha);
- }`;
- function sh(type,src){const a=gl.createShader(type);gl.shaderSource(a,src);gl.compileShader(a);if(!gl.getShaderParameter(a,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(a));return null}return a}
- const v=sh(gl.VERTEX_SHADER,vs),f=sh(gl.FRAGMENT_SHADER,fs);if(!v||!f){el.remove();return}const pr=gl.createProgram();gl.attachShader(pr,v);gl.attachShader(pr,f);gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(pr));el.remove();return}
- gl.useProgram(pr);const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const loc=gl.getAttribLocation(pr,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
- const res=gl.getUniformLocation(pr,"res"),tim=gl.getUniformLocation(pr,"time"),ctr=gl.getUniformLocation(pr,"center");let start=performance.now(),raf;
- function frame(now){let sec=(now-start)/1000,dpr=Math.min(devicePixelRatio||1,2);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(innerHeight*dpr);cv.style.width="100%";cv.style.height="100%";gl.viewport(0,0,cv.width,cv.height);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.uniform2f(res,cv.width,cv.height);gl.uniform1f(tim,sec);gl.uniform2f(ctr,.5,.60);gl.drawArrays(gl.TRIANGLES,0,6);if(sec<4.35)raf=requestAnimationFrame(frame);else el.remove()}
- raf=requestAnimationFrame(frame);setTimeout(()=>{cancelAnimationFrame(raf);el.remove()},4550)
+ const el=document.createElement("div"),cv=document.createElement("canvas");
+ el.className="water-splash";el.setAttribute("aria-hidden","true");
+ Object.assign(el.style,{position:"fixed",inset:"0",zIndex:"99",pointerEvents:"none",overflow:"hidden"});
+ Object.assign(cv.style,{display:"block",width:"100%",height:"100%",opacity:"0",transition:"opacity 120ms linear"});
+ el.append(cv);document.body.append(el);
+ let alive=true;
+ const remove=()=>{alive=false;el.remove()};
+ const watchdog=setTimeout(remove,4600);
+ import("https://esm.run/webgl-fluid-enhanced@0.6.1").then(mod=>{
+   if(!alive)return;
+   const fluid=mod.default||mod.webGLFluidEnhanced||mod;
+   fluid.simulation(cv,{
+     SIM_RESOLUTION:128,DYE_RESOLUTION:512,CAPTURE_RESOLUTION:256,
+     DENSITY_DISSIPATION:1.8,VELOCITY_DISSIPATION:2.2,
+     PRESSURE:.8,PRESSURE_ITERATIONS:12,CURL:24,
+     INITIAL:false,SPLAT_AMOUNT:1,SPLAT_RADIUS:.16,SPLAT_FORCE:5000,
+     SPLAT_KEY:"",HOVER:false,SHADING:true,COLORFUL:false,
+     COLOR_UPDATE_SPEED:0,COLOR_PALETTE:["#27a8d7","#8de3f8","#eafaff","#187da8"],
+     BACK_COLOR:"#000000",TRANSPARENT:true,BRIGHTNESS:.9,
+     BLOOM:false,SUNRAYS:false
+   });
+   requestAnimationFrame(()=>{if(alive)cv.style.opacity="1"});
+   const x=innerWidth*.5,y=innerHeight*.40;
+   // A hard central impact, then uneven outward shear vectors create a burst rather than a stationary blob.
+   fluid.splat(x,y,0,-680,"#e9fbff");
+   fluid.splat(x-3,y, -510,-330,"#46bfe9");
+   fluid.splat(x+2,y, 560,-260,"#1789bd");
+   fluid.splat(x,y+2, -80,640,"#79d9f4");
+   // Brief follow-up pushes add a torn, irregular edge as the paint spreads.
+   setTimeout(()=>{if(!alive)return;fluid.splat(x-55,y-20,-420,-100,"#8de3f8");fluid.splat(x+50,y-15,460,-80,"#2aa9d8");},95);
+ }).catch(err=>{console.error("Fluid splash could not start:",err);remove()});
+ setTimeout(()=>{clearTimeout(watchdog);remove()},4300);
 }document.querySelector("#art-form").addEventListener("submit",e=>{e.preventDefault();const file=document.querySelector("#image").files[0];if(file&&!file.type.startsWith("image/")){return;}const src=file?URL.createObjectURL(file):"";works.unshift({id:nextId++,title:document.querySelector("#title").value.trim(),category:document.querySelector("#category").selectedOptions[0].textContent,description:document.querySelector("#description").value.trim()||"Keine Beschreibung.",src});render();const status=document.querySelector("#status");status.textContent="Demo-Werk hinzugefügt. Keine Daten wurden hochgeladen.";status.classList.add("show");splash();e.target.reset();});
 document.querySelector("#works").addEventListener("click",e=>{const id=Number(e.target.dataset.delete);if(!id)return;const idx=works.findIndex(w=>w.id===id);if(idx>=0){if(works[idx].src)URL.revokeObjectURL(works[idx].src);works.splice(idx,1);render();}});
 document.querySelector("#save-surprise").addEventListener("click",()=>{document.querySelector("#surprise").textContent="„"+document.querySelector("#surprise-input").value+"“";});
