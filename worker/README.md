@@ -35,3 +35,6 @@ Die Admin-Adresse und Audience sind Konfiguration; private Schlüssel oder Passw
 
 ## Sicherheitshinweis
 Der Helfer `getTodaySurprise` ist nur für serverseitigen Aufruf nach erfolgreicher Admin-Identitätsprüfung vorgesehen. Er nimmt bewusst kein Datum aus dem Browser an und gibt keine zukünftigen Zeilen aus. Er ist noch nicht mit einer aktivierten Route verbunden.
+
+## Kreatives Easter Egg: Farbspritzer nach Upload
+Idee für die spätere Atelier-Verwaltung: Nach erfolgreichem Bild-Upload darf eine kurze, zufällige und rein dekorative Farbspritzer-Animation über der Admin-Oberfläche erscheinen, als wäre ein Tropfen von innen gegen die Scheibe geflogen. Sie läuft nur im privaten Atelier, nicht auf der öffentlichen Galerie, und wird ausschließlich nach bestätigtem Upload ausgelöst (nicht bei Fehlern). Animation etwa 600–900 ms, respektiert `prefers-reduced-motion`, blockiert keine Bedienung und lässt sich deaktivieren. Keine echten Browser-Benachrichtigungen, keine Audioeffekte und keine Änderung am Bild selbst.
