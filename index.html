@@ -21,6 +21,7 @@
       <a href="#atelier">Über das Atelier</a>
     </nav>
     <a class="nav-cta" href="#kontakt">Kontakt aufnehmen <span aria-hidden="true">↗</span></a>
+    <button class="secret-heart" type="button" aria-label="Privates Atelier öffnen" aria-haspopup="dialog" aria-controls="private-modal">♡</button>
     <button class="menu-toggle" aria-label="Menü öffnen" aria-expanded="false">☰</button>
   </header>
 
@@ -111,6 +112,21 @@
     <p>Mit Liebe gestaltet. Mit echten Werken gefüllt.</p>
     <div><a href="#kontakt">Kontakt</a><a href="#" aria-label="Impressum ergänzen">Impressum</a><a href="#" aria-label="Datenschutz ergänzen">Datenschutz</a></div>
   </footer>
+  <section class="private-modal" id="private-modal" role="dialog" aria-modal="true" aria-labelledby="private-title" hidden>
+    <button class="modal-close" type="button" aria-label="Fenster schließen">×</button>
+    <div class="private-envelope" aria-hidden="true">♡</div>
+    <p class="eyebrow">EIN KLEINER GEHEIMER ORT</p>
+    <h2 id="private-title">Nur für dich.</h2>
+    <p class="private-intro">Ein Platz für deine Kunst, deine Gedanken und 365 kleine Überraschungen von deinem Lieblingsmenschen.</p>
+    <div class="private-preview">
+      <span class="preview-label">DEIN TÄGLICHER LIEBESBRIEF</span>
+      <p>„Ich hoffe, du findest heute einen kleinen Grund zum Lächeln. Und falls nicht: Ich schicke dir hiermit einen. ❤️“</p>
+      <small>Eine Vorschau – die persönlichen Überraschungen werden noch eingerichtet.</small>
+    </div>
+    <p class="private-note">Das private Atelier wird gerade vorbereitet. Die sichere Anmeldung und dein persönlicher Verwaltungsbereich folgen im nächsten Schritt.</p>
+    <button class="button button-dark modal-ok" type="button">Wie schön ♡</button>
+  </section>
+  <div class="modal-backdrop" hidden></div>
   <script src="script.js"></script>
 </body>
 </html>
