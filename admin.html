@@ -48,7 +48,7 @@
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) {
-      if (response.status === 401 || response.status === 403) throw new Error("Anmeldung fehlt oder ist abgelaufen. Bitte „Bei Cloudflare anmelden“ öffnen und danach erneut versuchen.");
+      if (response.status === 401 || response.status === 403) throw new Error("Anmeldung fehlt oder ist abgelaufen. Bitte erneut anmelden.");
       throw new Error(data.error || "Die Anfrage ist fehlgeschlagen (" + response.status + ").");
     }
     return data;
