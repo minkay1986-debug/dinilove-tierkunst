@@ -27,6 +27,7 @@ function json(data, status = 200, origin = "") {
   };
   if (ALLOWED_ORIGINS.has(origin)) {
     headers["access-control-allow-origin"] = origin;
+    headers["access-control-allow-credentials"] = "true";
   }
   return new Response(JSON.stringify(data), { status, headers });
 }
@@ -118,6 +119,7 @@ export default {
           "access-control-allow-origin": origin,
           "access-control-allow-methods": "GET, POST, OPTIONS",
           "access-control-allow-headers": "content-type",
+          "access-control-allow-credentials": "true",
           "access-control-max-age": "600",
           "vary": "Origin",
         },
@@ -140,6 +142,58 @@ export default {
     }
     if (!authenticated) {
       return json({ ok: false, error: "Anmeldung erforderlich" }, 401, origin);
+    }
+
+    if (request.method === "GET" && url.pathname === "/admin/assets") {
+      const auth = "Basic " + btoa(env.CLOUDINARY_API_KEY + ":" + env.CLOUDINARY_API_SECRET);
+      const cloudinaryResponse = await fetch(
+        "https://api.cloudinary.com/v1_1/" + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) +
+          "/resources/image?prefix=dinilove%2F&max_results=100",
+        { headers: { authorization: auth, accept: "application/json" } }
+      );
+      if (!cloudinaryResponse.ok) {
+        return json({ ok: false, error: "Cloudinary-Galerie konnte nicht geladen werden" }, 502, origin);
+      }
+      const data = await cloudinaryResponse.json();
+      return json({
+        ok: true,
+        assets: (data.resources || []).map(asset => ({
+          publicId: asset.public_id,
+          url: asset.secure_url,
+          createdAt: asset.created_at,
+          format: asset.format,
+          width: asset.width,
+          height: asset.height,
+        })),
+      }, 200, origin);
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin/delete-asset") {
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: "Ungültige Anfrage" }, 400, origin);
+      }
+      const publicId = typeof body.publicId === "string" ? body.publicId : "";
+      if (!publicId.startsWith("dinilove/") || publicId.length > 250 || /[?#]/.test(publicId)) {
+        return json({ ok: false, error: "Ungültige Bildreferenz" }, 400, origin);
+      }
+      const auth = "Basic " + btoa(env.CLOUDINARY_API_KEY + ":" + env.CLOUDINARY_API_SECRET);
+      const form = new URLSearchParams({ public_id: publicId, invalidate: "true" });
+      const cloudinaryResponse = await fetch(
+        "https://api.cloudinary.com/v1_1/" + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) +
+          "/image/destroy",
+        { method: "POST", headers: { authorization: auth }, body: form }
+      );
+      if (!cloudinaryResponse.ok) {
+        return json({ ok: false, error: "Cloudinary konnte das Bild nicht löschen" }, 502, origin);
+      }
+      const result = await cloudinaryResponse.json();
+      if (result.result !== "ok" && result.result !== "not found") {
+        return json({ ok: false, error: "Cloudinary hat das Löschen nicht bestätigt" }, 502, origin);
+      }
+      return json({ ok: true, result: result.result }, 200, origin);
     }
 
     if (request.method === "POST" && url.pathname === "/admin/cloudinary-signature") {
