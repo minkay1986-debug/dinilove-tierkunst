@@ -7,6 +7,8 @@ const baseEnv = {
   ACCESS_TEAM_DOMAIN: "team.cloudflareaccess.com",
   ACCESS_AUD: "test-audience",
   ADMIN_EMAIL: "Nadine_geller@hotmail.de",
+  ADMIN_PASSWORD: "test-only-password",
+  ADMIN_SESSION_SECRET: "test-session-secret-long-enough",
   CLOUDINARY_CLOUD_NAME: "test-cloud",
   CLOUDINARY_API_KEY: "test-key",
   CLOUDINARY_API_SECRET: "test-secret",
@@ -85,4 +87,26 @@ test("gallery and delete routes require Access JWT", async () => {
     body: JSON.stringify({ publicId: "dinilove/test-image" }),
   }), baseEnv);
   assert.equal(remove.status, 401);
+});
+
+test("password login issues a session token and protects admin routes", async () => {
+  const bad = await worker.fetch(new Request("https://api.example/admin/login", {
+    method: "POST", headers: { Origin: origin, "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "nadine_geller@hotmail.de", password: "wrong" }),
+  }), baseEnv);
+  assert.equal(bad.status, 401);
+
+  const login = await worker.fetch(new Request("https://api.example/admin/login", {
+    method: "POST", headers: { Origin: origin, "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "Nadine_geller@hotmail.de", password: "test-only-password" }),
+  }), baseEnv);
+  assert.equal(login.status, 200);
+  const session = await login.json();
+  assert.equal(session.ok, true);
+  assert.equal(typeof session.token, "string");
+
+  const authenticated = await worker.fetch(new Request("https://api.example/admin/not-a-route", {
+    headers: { Origin: origin, Authorization: "Bearer " + session.token },
+  }), baseEnv);
+  assert.equal(authenticated.status, 404);
 });
