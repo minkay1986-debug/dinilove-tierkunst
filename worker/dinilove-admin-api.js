@@ -32,75 +32,39 @@ function json(data, status = 200, origin = "") {
   return new Response(JSON.stringify(data), { status, headers });
 }
 
-function base64UrlToBytes(value) {
-  if (typeof value !== "string" || !/^[A-Za-z0-9_-]+$/.test(value)) {
-    throw new Error("Invalid base64url");
-  }
-  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
-  const raw = atob(padded);
-  return Uint8Array.from(raw, c => c.charCodeAt(0));
+function toBase64Url(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
 }
 
-function decodeJsonPart(value) {
-  return JSON.parse(new TextDecoder().decode(base64UrlToBytes(value)));
+async function hmac(secret, message) {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message)));
 }
 
-async function verifyAccessJwt(request, env) {
-  const token = request.headers.get("Cf-Access-Jwt-Assertion");
-  if (!token || !env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return false;
+async function issueSession(env) {
+  const expires = Math.floor(Date.now() / 1000) + 8 * 60 * 60;
+  const payload = toBase64Url(new TextEncoder().encode(JSON.stringify({ email: (env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase(), exp: expires })));
+  const signature = toBase64Url(await hmac(env.ADMIN_SESSION_SECRET, payload));
+  return { token: payload + "." + signature, expires };
+}
 
+async function verifySession(request, env) {
+  if (!env.ADMIN_SESSION_SECRET) return false;
+  const authorization = request.headers.get("Authorization") || "";
+  const token = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
   const parts = token.split(".");
-  if (parts.length !== 3) return false;
-
-  let header, claims;
-  try {
-    header = decodeJsonPart(parts[0]);
-    claims = decodeJsonPart(parts[1]);
-  } catch {
-    return false;
-  }
-
-  if (header.alg !== "RS256" || typeof header.kid !== "string") return false;
-
-  const team = env.ACCESS_TEAM_DOMAIN
-    .replace(/^https?:\/\//, "")
-    .replace(/\/$/, "");
-  const issuer = "https://" + team;
-  const now = Math.floor(Date.now() / 1000);
-  const expectedEmail = (env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
-
-  if (
-    claims.iss !== issuer ||
-    !Array.isArray(claims.aud) ||
-    !claims.aud.includes(env.ACCESS_AUD) ||
-    typeof claims.exp !== "number" ||
-    claims.exp <= now ||
-    typeof claims.iat !== "number" ||
-    claims.iat > now + 60 ||
-    (typeof claims.nbf === "number" && claims.nbf > now + 60) ||
-    typeof claims.email !== "string" ||
-    claims.email.trim().toLowerCase() !== expectedEmail
-  ) return false;
-
-  const jwksResponse = await fetch(issuer + "/cdn-cgi/access/certs", {
-    headers: { accept: "application/json" },
-    cf: { cacheTtl: 300 },
-  });
-  if (!jwksResponse.ok) return false;
-  const jwks = await jwksResponse.json();
-  const jwk = jwks.keys?.find(k => k.kid === header.kid && k.kty === "RSA");
-  if (!jwk) return false;
-
-  const key = await crypto.subtle.importKey(
-    "jwk", jwk, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]
-  );
-  const signed = new TextEncoder().encode(parts[0] + "." + parts[1]);
-  return crypto.subtle.verify(
-    "RSASSA-PKCS1-v1_5", key, base64UrlToBytes(parts[2]), signed
-  );
+  if (parts.length !== 2) return false;
+  let payload;
+  try { const raw = parts[0].replace(/-/g, "+").replace(/_/g, "/"); payload = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(raw + "=".repeat((4 - raw.length % 4) % 4)), c => c.charCodeAt(0)))); } catch { return false; }
+  if (!payload || typeof payload.exp !== "number" || payload.exp <= Math.floor(Date.now() / 1000)) return false;
+  if (payload.email !== (env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase()) return false;
+  const expected = toBase64Url(await hmac(env.ADMIN_SESSION_SECRET, parts[0]));
+  if (expected.length !== parts[1].length) return false;
+  let diff = 0; for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ parts[1].charCodeAt(i);
+  return diff === 0;
 }
-
 async function sha1Hex(value) {
   const digest = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(value));
   return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
@@ -118,7 +82,7 @@ export default {
         headers: {
           "access-control-allow-origin": origin,
           "access-control-allow-methods": "GET, POST, OPTIONS",
-          "access-control-allow-headers": "content-type",
+          "access-control-allow-headers": "content-type, authorization",
           "access-control-allow-credentials": "true",
           "access-control-max-age": "600",
           "vary": "Origin",
@@ -134,15 +98,23 @@ export default {
       return json({ ok: false, error: "Origin nicht erlaubt" }, 403);
     }
 
+    if (request.method === "POST" && url.pathname === "/admin/login") {
+      if (!env.ADMIN_PASSWORD || !env.ADMIN_SESSION_SECRET) return json({ ok: false, error: "Login ist serverseitig noch nicht konfiguriert" }, 503, origin);
+      let body;
+      try { body = await request.json(); } catch { return json({ ok: false, error: "Ungültige Anfrage" }, 400, origin); }
+      const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+      const password = typeof body.password === "string" ? body.password : "";
+      const expectedEmail = (env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
+      if (email !== expectedEmail || !password || password !== env.ADMIN_PASSWORD) return json({ ok: false, error: "E-Mail oder Passwort stimmt nicht." }, 401, origin);
+      const session = await issueSession(env);
+      return json({ ok: true, token: session.token, expires: session.expires }, 200, origin);
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin/logout") return json({ ok: true }, 200, origin);
+
     let authenticated = false;
-    try {
-      authenticated = await verifyAccessJwt(request, env);
-    } catch {
-      authenticated = false;
-    }
-    if (!authenticated) {
-      return json({ ok: false, error: "Anmeldung erforderlich" }, 401, origin);
-    }
+    try { authenticated = await verifySession(request, env); } catch { authenticated = false; }
+    if (!authenticated) return json({ ok: false, error: "Bitte anmelden." }, 401, origin);
 
     if (request.method === "GET" && url.pathname === "/admin/assets") {
       if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
