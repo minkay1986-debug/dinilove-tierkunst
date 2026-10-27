@@ -16,12 +16,18 @@
 <header class="top"><div class="brand">DiniLove <small>ATELIER · VERWALTUNG</small></div><div class="top-note">Privater Verwaltungsbereich · kein öffentlicher Galerie-Link</div></header>
 <main class="wrap">
 <section class="intro"><div><div class="eyebrow">HINTER DEN KULISSEN</div><h1>Dein Atelier, in deiner Hand.</h1><p class="muted">Bilder hochladen und vorhandene Werke im Cloudinary-Ordner „dinilove“ verwalten.</p></div><div class="status" id="authStatus"><span class="dot"></span><span id="authText">Anmeldung wird geprüft</span></div></section>
-<div class="grid">
+<section class="panel" id="loginPanel" style="max-width:460px;margin:24px auto" aria-labelledby="loginTitle">
+<h2 id="loginTitle">Anmelden</h2><p class="muted">Melde dich an, um deine Bilder zu verwalten.</p>
+<form id="loginForm"><label class="field"><span for="loginEmail">E-Mail</span><input id="loginEmail" name="email" type="email" autocomplete="username" required style="width:100%;padding:12px;border:1px solid var(--line);font:inherit"></label>
+<label class="field"><span for="loginPassword">Passwort</span><input id="loginPassword" name="password" type="password" autocomplete="current-password" required style="width:100%;padding:12px;border:1px solid var(--line);font:inherit"></label>
+<div class="actions"><button class="btn" id="loginButton" type="submit">Anmelden</button></div></form>
+<div class="notice" id="loginNotice" role="status" aria-live="polite"></div></section>
+<div class="grid" id="adminGrid" hidden>
 <section class="panel" aria-labelledby="uploadTitle"><h2 id="uploadTitle">Neues Werk</h2><p class="muted">Wähle eine Bilddatei. Das Original wird direkt zu Cloudinary übertragen; dein geheimes API-Passwort bleibt auf dem Server.</p>
-<form id="uploadForm"><label class="field"><span for="imageFile">Bilddatei</span><input id="imageFile" name="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required></label><p class="hint">Erlaubt: JPG, PNG, WebP oder AVIF. Bitte nur Bilder hochladen, die veröffentlicht werden dürfen.</p><div class="actions"><button class="btn" id="uploadButton" type="submit">Bild hochladen</button><button class="btn secondary" id="clearButton" type="button">Auswahl leeren</button></div></form><div class="notice" id="uploadNotice" role="status" aria-live="polite"></div><div class="foot">Sicherheit: Anmeldung über Cloudflare Access. Keine Registrierung und kein eigenes Passwort auf dieser Seite.</div></section>
+<form id="uploadForm"><label class="field"><span for="imageFile">Bilddatei</span><input id="imageFile" name="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required></label><p class="hint">Erlaubt: JPG, PNG, WebP oder AVIF. Bitte nur Bilder hochladen, die veröffentlicht werden dürfen.</p><div class="actions"><button class="btn" id="uploadButton" type="submit">Bild hochladen</button><button class="btn secondary" id="clearButton" type="button">Auswahl leeren</button></div></form><div class="notice" id="uploadNotice" role="status" aria-live="polite"></div><div class="foot">Testzugang für Nadine. Nach dem Test kann das Passwort serverseitig geändert werden.</div></section>
 <section class="panel" aria-labelledby="galleryTitle"><div class="gallery-head"><div><h2 id="galleryTitle">Deine Werke</h2><p class="muted">Bilder aus dem Ordner „dinilove“.</p></div><button class="btn secondary" id="refreshButton" type="button">Galerie aktualisieren</button></div><div class="notice" id="galleryNotice" role="status" aria-live="polite"></div><div class="gallery" id="gallery"><div class="empty">Die Galerie wird geladen …</div></div></section>
 </div>
-<p class="foot">Admin-Testoberfläche. Änderungen an Bildern wirken auf Cloudinary-Inhalte. Diese Seite ist im Testzweig erstellt und nicht auf der Live-Website veröffentlicht.</p>
+<p class="foot">Admin-Testoberfläche. Änderungen an Bildern wirken auf Cloudinary-Inhalte. Diese Seite ist im Testzweig erstellt und nicht auf der Live-Website veröffentlicht. <button class="btn secondary" id="logoutButton" type="button">Abmelden</button></p>
 </main>
 <script>
 (() => {
@@ -35,10 +41,10 @@
     el.classList.toggle("error", error);
   };
   async function api(path, options = {}) {
+    const token = sessionStorage.getItem("dinilove_admin_token");
     const response = await fetch(API + path, {
       ...options,
-      credentials: "include",
-      headers: { ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }), ...(options.headers || {}) }
+      headers: { ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }), ...(token && path !== "/admin/login" ? { Authorization: "Bearer " + token } : {}), ...(options.headers || {}) }
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) {
@@ -47,20 +53,13 @@
     }
     return data;
   }
-  function loginLink() {
-    const link = document.createElement("a");
-    link.href = API + "/health";
-    link.target = "_blank"; link.rel = "noopener noreferrer";
-    link.className = "btn secondary"; link.textContent = "Bei Cloudflare anmelden";
-    link.style.display = "inline-block"; link.style.textDecoration = "none"; link.style.marginTop = "10px";
-    $("authStatus").insertAdjacentElement("afterend", link);
-  }
   async function loadGallery() {
     gallery.innerHTML = '<div class="empty">Galerie wird geladen …</div>';
     try {
       const data = await api("/admin/assets");
-      authText.textContent = "Zugriff bestätigt";
+      authText.textContent = "Angemeldet";
       $("authStatus").querySelector(".dot").style.background = "#71845d";
+      $("loginPanel").hidden = true; $("adminGrid").hidden = false; $("logoutButton").hidden = false;
       const assets = data.assets || [];
       if (!assets.length) { gallery.innerHTML = '<div class="empty">Noch keine Bilder im Ordner „dinilove“.</div>'; return; }
       gallery.replaceChildren();
@@ -85,7 +84,8 @@
       gallery.innerHTML = '<div class="empty">Die geschützte Galerie konnte nicht geladen werden.</div>';
       notice("galleryNotice", error.message, true);
       authText.textContent = "Anmeldung erforderlich";
-      if (!$("authLoginLink")) { loginLink(); const last = $("authStatus").nextElementSibling; if (last && last.tagName === "A") last.id = "authLoginLink"; }
+      sessionStorage.removeItem("dinilove_admin_token");
+      $("loginPanel").hidden = false; $("adminGrid").hidden = true; $("logoutButton").hidden = true;
     }
   }
   $("uploadForm").addEventListener("submit", async (event) => {
@@ -106,9 +106,22 @@
     } catch (error) { notice("uploadNotice", error.message, true); }
     finally { button.disabled = false; button.textContent = "Bild hochladen"; }
   });
+  $("loginForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = $("loginButton"); button.disabled = true; button.textContent = "Anmeldung läuft …";
+    try {
+      const result = await api("/admin/login", { method: "POST", body: JSON.stringify({ email: $("loginEmail").value, password: $("loginPassword").value }) });
+      sessionStorage.setItem("dinilove_admin_token", result.token);
+      $("loginForm").reset(); notice("loginNotice", "Anmeldung erfolgreich."); await loadGallery();
+    } catch (error) { notice("loginNotice", error.message, true); }
+    finally { button.disabled = false; button.textContent = "Anmelden"; }
+  });
+  $("logoutButton").addEventListener("click", () => { sessionStorage.removeItem("dinilove_admin_token"); $("adminGrid").hidden = true; $("loginPanel").hidden = false; authText.textContent = "Abgemeldet"; gallery.replaceChildren(); });
   $("clearButton").addEventListener("click", () => $("uploadForm").reset());
   $("refreshButton").addEventListener("click", loadGallery);
-  loadGallery();
+  $("logoutButton").hidden = true;
+  if (sessionStorage.getItem("dinilove_admin_token")) loadGallery();
+  else { $("loginPanel").hidden = false; $("adminGrid").hidden = true; authText.textContent = "Anmeldung erforderlich"; }
 })();
 </script>
 </body>
