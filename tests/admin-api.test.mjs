@@ -40,6 +40,7 @@ test("preflight permits only approved origins", async () => {
   }), {});
   assert.equal(allowed.status, 204);
   assert.equal(allowed.headers.get("access-control-allow-origin"), origin);
+  assert.equal(allowed.headers.get("access-control-allow-credentials"), "true");
 
   const denied = await worker.fetch(new Request("https://api.example/admin/cloudinary-signature", {
     method: "OPTIONS", headers: { Origin: "https://evil.example" },
@@ -70,4 +71,18 @@ test("unknown authenticated-only routes never reveal configuration", async () =>
     baseEnv
   );
   assert.equal(response.status, 401);
+});
+
+test("gallery and delete routes require Access JWT", async () => {
+  const list = await worker.fetch(new Request("https://api.example/admin/assets", {
+    headers: { Origin: origin },
+  }), baseEnv);
+  assert.equal(list.status, 401);
+
+  const remove = await worker.fetch(new Request("https://api.example/admin/delete-asset", {
+    method: "POST",
+    headers: { Origin: origin, "Content-Type": "application/json" },
+    body: JSON.stringify({ publicId: "dinilove/test-image" }),
+  }), baseEnv);
+  assert.equal(remove.status, 401);
 });
