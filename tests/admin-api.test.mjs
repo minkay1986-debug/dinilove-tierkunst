@@ -60,7 +60,7 @@ test("requires Access JWT before issuing Cloudinary signatures", async () => {
     baseEnv
   );
   assert.equal(response.status, 401);
-  assert.deepEqual(await response.json(), { ok: false, error: "Anmeldung erforderlich" });
+  assert.deepEqual(await response.json(), { ok: false, error: "Bitte anmelden." });
 });
 
 test("unknown authenticated-only routes never reveal configuration", async () => {
