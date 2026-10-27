@@ -1,16 +1,12 @@
 /**
- * DiniLove Admin API — security-first foundation.
+ * DiniLove Admin API — password-protected test implementation.
  *
- * Deploy only after configuring Cloudflare Access for this Worker and setting:
- * ACCESS_TEAM_DOMAIN, ACCESS_AUD, ADMIN_EMAIL, CLOUDINARY_CLOUD_NAME,
- * CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET.
+ * Configure ADMIN_EMAIL, ADMIN_PASSWORD and ADMIN_SESSION_SECRET as Worker
+ * variables/secrets. Cloudinary credentials must remain secret_text bindings.
+ * The admin endpoints issue short-lived signed sessions and never expose the
+ * Cloudinary API secret to the browser. No public signup or password reset.
  *
- * Cloudflare Access must protect this Worker at the edge. This code also
- * verifies the signed Access JWT and enforces ADMIN_EMAIL server-side.
- * No public signup or password reset is implemented.
- *
- * This endpoint only signs Cloudinary uploads. It does not upload files,
- * manage gallery metadata, or change the public website.
+ * This is a separate admin API. It does not modify the public website.
  */
 const ALLOWED_ORIGINS = new Set([
   "https://dinilove.de",
