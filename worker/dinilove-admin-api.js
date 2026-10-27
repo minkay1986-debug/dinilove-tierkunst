@@ -145,6 +145,9 @@ export default {
     }
 
     if (request.method === "GET" && url.pathname === "/admin/assets") {
+      if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
+        return json({ ok: false, error: "Cloudinary ist noch nicht konfiguriert" }, 503, origin);
+      }
       const auth = "Basic " + btoa(env.CLOUDINARY_API_KEY + ":" + env.CLOUDINARY_API_SECRET);
       const cloudinaryResponse = await fetch(
         "https://api.cloudinary.com/v1_1/" + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) +
@@ -169,6 +172,9 @@ export default {
     }
 
     if (request.method === "POST" && url.pathname === "/admin/delete-asset") {
+      if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
+        return json({ ok: false, error: "Cloudinary ist noch nicht konfiguriert" }, 503, origin);
+      }
       let body;
       try {
         body = await request.json();
@@ -180,20 +186,20 @@ export default {
         return json({ ok: false, error: "Ungültige Bildreferenz" }, 400, origin);
       }
       const auth = "Basic " + btoa(env.CLOUDINARY_API_KEY + ":" + env.CLOUDINARY_API_SECRET);
-      const form = new URLSearchParams({ public_id: publicId, invalidate: "true" });
+      const query = new URLSearchParams({ "public_ids[]": publicId, invalidate: "true" });
       const cloudinaryResponse = await fetch(
         "https://api.cloudinary.com/v1_1/" + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) +
-          "/image/destroy",
-        { method: "POST", headers: { authorization: auth }, body: form }
+          "/resources/image?" + query.toString(),
+        { method: "DELETE", headers: { authorization: auth, accept: "application/json" } }
       );
       if (!cloudinaryResponse.ok) {
         return json({ ok: false, error: "Cloudinary konnte das Bild nicht löschen" }, 502, origin);
       }
       const result = await cloudinaryResponse.json();
-      if (result.result !== "ok" && result.result !== "not found") {
+      if (!result.deleted || !Object.prototype.hasOwnProperty.call(result.deleted, publicId)) {
         return json({ ok: false, error: "Cloudinary hat das Löschen nicht bestätigt" }, 502, origin);
       }
-      return json({ ok: true, result: result.result }, 200, origin);
+      return json({ ok: true, result: result.deleted[publicId] }, 200, origin);
     }
 
     if (request.method === "POST" && url.pathname === "/admin/cloudinary-signature") {
