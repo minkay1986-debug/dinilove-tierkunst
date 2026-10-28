@@ -59,27 +59,13 @@
         <div><p class="eyebrow">DIE KUNSTGALERIE</p><h2>Jedes Tier hat <em>seinen Blick.</em></h2></div>
         <p>Entdecke die Werke in Ruhe. Jedes Bild wird erst dann gezeigt, wenn das echte Original der Künstlerin hinterlegt ist.</p>
       </div>
-      <div class="filter-row" role="group" aria-label="Galeriefilter">
-        <button class="filter active" data-filter="all">Alle Werke <span>00</span></button>
-        <button class="filter" data-filter="wild">Wildtiere</button>
-        <button class="filter" data-filter="liebling">Lieblingstiere</button>
-        <button class="filter" data-filter="auftrag">Auftragsarbeiten</button>
+      <div class="filter-row" role="group" aria-label="Galerie">
+        <button class="filter active" data-filter="all">Alle Werke <span id="gallery-count">…</span></button>
       </div>
-      <div class="gallery-grid" id="gallery-grid">
-        <article class="empty-work" data-category="wild">
-          <div class="empty-art"><span>✳</span><small>PLATZ FÜR EIN<br>ECHTES ORIGINAL</small></div>
-          <div class="work-info"><div><h3>Ein Werk kommt bald</h3><p>Wildtiere · Buntstift</p></div><span class="work-number">01</span></div>
-        </article>
-        <article class="empty-work" data-category="liebling">
-          <div class="empty-art empty-art-two"><span>✳</span><small>PLATZ FÜR EIN<br>ECHTES ORIGINAL</small></div>
-          <div class="work-info"><div><h3>Ein Werk kommt bald</h3><p>Lieblingstiere · Buntstift</p></div><span class="work-number">02</span></div>
-        </article>
-        <article class="empty-work" data-category="auftrag">
-          <div class="empty-art empty-art-three"><span>✳</span><small>PLATZ FÜR EIN<br>ECHTES ORIGINAL</small></div>
-          <div class="work-info"><div><h3>Dein Tier als Porträt</h3><p>Individuelle Auftragsarbeit</p></div><span class="work-number">03</span></div>
-        </article>
+      <div class="gallery-grid" id="gallery-grid" aria-live="polite">
+        <p class="gallery-loading">Die echten Atelierwerke werden geladen …</p>
       </div>
-      <p class="gallery-footnote"><span>✳</span> Die Galerie wird mit echten Werken ergänzt – keine KI-Tierbilder, keine erfundenen Originale.</p>
+      <p class="gallery-footnote"><span>✳</span> Echte Werke aus dem DiniLove-Atelier.</p>
     </section>
 
     <section class="commission section" id="auftragsarbeiten">
