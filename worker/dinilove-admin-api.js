@@ -205,7 +205,7 @@ export default {
       const query = new URLSearchParams({ "public_ids[]": publicId, invalidate: "true" });
       const cloudinaryResponse = await fetch(
         "https://api.cloudinary.com/v1_1/" + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) +
-          "/resources/image?" + query.toString(),
+          "/resources/image/upload?" + query.toString(),
         { method: "DELETE", headers: { authorization: auth, accept: "application/json" } }
       );
       if (!cloudinaryResponse.ok) {
