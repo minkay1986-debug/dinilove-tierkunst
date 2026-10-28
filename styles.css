@@ -50,3 +50,12 @@
   .floating-note{position:relative;right:auto;bottom:auto;margin:14px 0 0 auto;width:max-content;max-width:100%;padding:10px 14px;font-size:12px;box-shadow:none}
   .hero-side-label{display:none}
 }
+
+
+/* Feine, realistischere Schneeflocken in Rosé statt Grün */
+.snowflake{color:#c96b83!important;text-shadow:0 1px 0 #fffaf8,0 0 7px #c96b8326;display:inline-block;line-height:1}
+.note-star.snowflake{font-size:25px}
+.placeholder-icon.snowflake{font-size:35px;color:#c96b83!important}
+.tiny-sun.snowflake{font-size:25px}
+.intro-strip i.snowflake{font-size:16px}
+.atelier-signature .snowflake{font-size:18px;margin-left:10px}
