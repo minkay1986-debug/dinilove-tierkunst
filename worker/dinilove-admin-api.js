@@ -140,6 +140,29 @@ export default {
       }, 200, origin);
     }
 
+    if (request.method === "POST" && url.pathname === "/public/contact") {
+      if (!ALLOWED_ORIGINS.has(origin)) return json({ ok: false, error: "Origin nicht erlaubt" }, 403);
+      if (!env.DINILOVE_MESSAGES) return json({ ok: false, error: "Kontaktformular ist vorübergehend nicht verfügbar" }, 503, origin);
+      let body;
+      try { body = await request.json(); } catch { return json({ ok: false, error: "Ungültige Anfrage" }, 400, origin); }
+      const email = typeof body.email === "string" ? body.email.trim() : "";
+      const message = typeof body.message === "string" ? body.message.trim() : "";
+      const name = typeof body.name === "string" ? body.name.trim().slice(0, 100) : "";
+      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254) return json({ ok: false, error: "Bitte gib eine gültige E-Mail-Adresse an." }, 400, origin);
+      if (message.length < 5 || message.length > 5000) return json({ ok: false, error: "Die Nachricht muss zwischen 5 und 5000 Zeichen lang sein." }, 400, origin);
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip));
+      const ipKey = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+      const rateKey = "rate:" + ipKey;
+      const current = Number(await env.DINILOVE_MESSAGES.get(rateKey) || "0");
+      if (current >= 5) return json({ ok: false, error: "Du hast bereits mehrere Nachrichten gesendet. Bitte versuche es später erneut." }, 429, origin);
+      await env.DINILOVE_MESSAGES.put(rateKey, String(current + 1), { expirationTtl: 3600 });
+      const id = crypto.randomUUID();
+      const item = { id, name, email, message, status: "neu", createdAt: new Date().toISOString() };
+      await env.DINILOVE_MESSAGES.put("message:" + id, JSON.stringify(item), { expirationTtl: 7776000 });
+      return json({ ok: true, message: "Deine Nachricht wurde übermittelt." }, 201, origin);
+    }
+
     if (!ALLOWED_ORIGINS.has(origin)) {
       return json({ ok: false, error: "Origin nicht erlaubt" }, 403);
     }
@@ -166,6 +189,35 @@ export default {
     let authenticated = false;
     try { authenticated = await verifySession(request, env); } catch { authenticated = false; }
     if (!authenticated) return json({ ok: false, error: "Bitte anmelden." }, 401, origin);
+
+    if (request.method === "GET" && url.pathname === "/admin/messages") {
+      if (!env.DINILOVE_MESSAGES) return json({ ok: false, error: "Nachrichtenspeicher ist nicht konfiguriert" }, 503, origin);
+      const listed = await env.DINILOVE_MESSAGES.list({ prefix: "message:", limit: 100 });
+      const messages = [];
+      for (const key of listed.keys) {
+        const raw = await env.DINILOVE_MESSAGES.get(key.name);
+        if (!raw) continue;
+        try { messages.push(JSON.parse(raw)); } catch {}
+      }
+      messages.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      return json({ ok: true, messages }, 200, origin);
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin/message-status") {
+      if (!env.DINILOVE_MESSAGES) return json({ ok: false, error: "Nachrichtenspeicher ist nicht konfiguriert" }, 503, origin);
+      let body;
+      try { body = await request.json(); } catch { return json({ ok: false, error: "Ungültige Anfrage" }, 400, origin); }
+      const id = typeof body.id === "string" ? body.id : "";
+      const status = typeof body.status === "string" ? body.status : "";
+      if (!/^[0-9a-f-]{36}$/i.test(id) || !["neu", "bearbeitet"].includes(status)) return json({ ok: false, error: "Ungültige Nachricht oder Statusangabe" }, 400, origin);
+      const key = "message:" + id;
+      const raw = await env.DINILOVE_MESSAGES.get(key);
+      if (!raw) return json({ ok: false, error: "Nachricht nicht gefunden" }, 404, origin);
+      const item = JSON.parse(raw);
+      item.status = status;
+      await env.DINILOVE_MESSAGES.put(key, JSON.stringify(item), { expirationTtl: 7776000 });
+      return json({ ok: true }, 200, origin);
+    }
 
     if (request.method === "GET" && url.pathname === "/admin/assets") {
       if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
