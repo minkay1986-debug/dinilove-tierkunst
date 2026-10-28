@@ -17,6 +17,32 @@ async function loadPublicGallery() {
     const data = await response.json();
     if (!response.ok || !data.ok || !Array.isArray(data.assets)) throw new Error('gallery-unavailable');
     count.textContent = String(data.assets.length).padStart(2, '0');
+
+    // Use the first uploaded original in the large hero frame as well as the gallery.
+    const heroPlaceholder = document.querySelector('.hero-art .art-placeholder');
+    if (heroPlaceholder && data.assets.length > 0) {
+      const heroLink = document.createElement('a');
+      heroLink.href = data.assets[0].url;
+      heroLink.target = '_blank';
+      heroLink.rel = 'noopener noreferrer';
+      heroLink.setAttribute('aria-label', 'Originalwerk in voller Größe öffnen');
+      heroLink.style.display = 'block';
+      const heroImage = document.createElement('img');
+      heroImage.src = data.assets[0].url;
+      heroImage.alt = 'Originale Tierkunst aus dem DiniLove-Atelier';
+      heroImage.loading = 'eager';
+      heroImage.decoding = 'async';
+      heroImage.style.width = '100%';
+      heroImage.style.height = '100%';
+      heroImage.style.objectFit = 'contain';
+      heroImage.style.display = 'block';
+      heroLink.append(heroImage);
+      heroPlaceholder.replaceWith(heroLink);
+      heroLink.style.aspectRatio = '4 / 4.4';
+      heroLink.style.background = '#f3eee4';
+      heroLink.style.overflow = 'hidden';
+    }
+
     grid.replaceChildren();
     if (data.assets.length === 0) {
       const empty = document.createElement('p');
