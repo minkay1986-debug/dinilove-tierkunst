@@ -139,6 +139,34 @@ export default {
     try { authenticated = await verifySession(request, env); } catch { authenticated = false; }
     if (!authenticated) return json({ ok: false, error: "Bitte anmelden." }, 401, origin);
 
+    if (request.method === "GET" && url.pathname === "/public/gallery") {
+      if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
+        return json({ ok: false, error: "Galerie ist vorübergehend nicht verfügbar" }, 503, origin);
+      }
+      const auth = "Basic " + btoa(env.CLOUDINARY_API_KEY + ":" + env.CLOUDINARY_API_SECRET);
+      const cloudinaryResponse = await fetch(
+        "https://api.cloudinary.com/v1_1/" + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) +
+          "/resources/image?type=upload&prefix=dinilove%2F&max_results=100",
+        { headers: { authorization: auth, accept: "application/json" } }
+      );
+      if (!cloudinaryResponse.ok) {
+        console.error("Public gallery request failed", { status: cloudinaryResponse.status });
+        return json({ ok: false, error: "Galerie konnte nicht geladen werden" }, 502, origin);
+      }
+      const data = await cloudinaryResponse.json();
+      return json({
+        ok: true,
+        assets: (data.resources || []).map(asset => ({
+          publicId: asset.public_id,
+          url: asset.secure_url,
+          format: asset.format,
+          width: asset.width,
+          height: asset.height,
+          createdAt: asset.created_at
+        }))
+      }, 200, origin);
+    }
+
     if (request.method === "GET" && url.pathname === "/admin/assets") {
       if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
         return json({ ok: false, error: "Cloudinary ist noch nicht konfiguriert" }, 503, origin);
