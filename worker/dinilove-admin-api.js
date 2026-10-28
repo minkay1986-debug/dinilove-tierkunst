@@ -146,7 +146,7 @@ export default {
       const auth = "Basic " + btoa(env.CLOUDINARY_API_KEY + ":" + env.CLOUDINARY_API_SECRET);
       const cloudinaryResponse = await fetch(
         "https://api.cloudinary.com/v1_1/" + encodeURIComponent(env.CLOUDINARY_CLOUD_NAME) +
-          "/resources/image?prefix=dinilove%2F&max_results=100",
+          "/resources/image?type=upload&prefix=dinilove%2F&max_results=100",
         { headers: { authorization: auth, accept: "application/json" } }
       );
       if (!cloudinaryResponse.ok) {
