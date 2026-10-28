@@ -37,3 +37,7 @@
 .contact-form .button:disabled{opacity:.65;cursor:wait}
 .contact-result{font-size:13px;margin:0;min-height:0}
 .contact-result.is-error{color:#9d4339}
+
+
+/* Dezenter Direktlink zur Admin-Anmeldung – ohne Hover-Text */
+.brand-home{display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}.admin-heart{display:inline-grid;place-items:center;width:24px;height:24px;margin-left:0;color:#c96b83;text-decoration:none;font-size:17px;line-height:1;border-radius:50%;transition:color .18s,transform .18s}.admin-heart:hover{color:#a94e67;transform:scale(1.08)}.admin-heart:focus-visible{outline:2px solid var(--olive);outline-offset:3px}
