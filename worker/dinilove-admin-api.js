@@ -13,6 +13,28 @@ const ALLOWED_ORIGINS = new Set([
   "https://www.dinilove.de",
 ]);
 const DEFAULT_ADMIN_EMAIL = "nadine_geller@hotmail.de";
+const SESSION_SECONDS = 60 * 60;
+// Per-isolate throttle; supplementary only, not a globally consistent rate limit.
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 5;
+function clientKey(request) { return request.headers.get("CF-Connecting-IP") || "unknown"; }
+function loginBlocked(request) {
+  const now = Date.now(), key = clientKey(request), entry = loginAttempts.get(key);
+  if (!entry || now - entry.startedAt >= LOGIN_WINDOW_MS) {
+    loginAttempts.set(key, { startedAt: now, count: 0 });
+    return false;
+  }
+  return entry.count >= LOGIN_MAX_ATTEMPTS;
+}
+function recordLoginFailure(request) {
+  const now = Date.now(), key = clientKey(request);
+  let entry = loginAttempts.get(key);
+  if (!entry || now - entry.startedAt >= LOGIN_WINDOW_MS) entry = { startedAt: now, count: 0 };
+  entry.count += 1;
+  loginAttempts.set(key, entry);
+}
+function clearLoginFailures(request) { loginAttempts.delete(clientKey(request)); }
 
 function json(data, status = 200, origin = "") {
   const headers = {
@@ -40,7 +62,7 @@ async function hmac(secret, message) {
 }
 
 async function issueSession(env) {
-  const expires = Math.floor(Date.now() / 1000) + 8 * 60 * 60;
+  const expires = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
   const payload = toBase64Url(new TextEncoder().encode(JSON.stringify({ email: (env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase(), exp: expires })));
   const signature = toBase64Url(await hmac(env.ADMIN_SESSION_SECRET, payload));
   return { token: payload + "." + signature, expires };
@@ -96,12 +118,17 @@ export default {
 
     if (request.method === "POST" && url.pathname === "/admin/login") {
       if (!env.ADMIN_PASSWORD || !env.ADMIN_SESSION_SECRET) return json({ ok: false, error: "Login ist serverseitig noch nicht konfiguriert" }, 503, origin);
+      if (loginBlocked(request)) return json({ ok: false, error: "Zu viele Anmeldeversuche. Bitte in 10 Minuten erneut versuchen." }, 429, origin);
       let body;
       try { body = await request.json(); } catch { return json({ ok: false, error: "Ungültige Anfrage" }, 400, origin); }
       const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
       const password = typeof body.password === "string" ? body.password : "";
       const expectedEmail = (env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
-      if (email !== expectedEmail || !password || password !== env.ADMIN_PASSWORD) return json({ ok: false, error: "E-Mail oder Passwort stimmt nicht." }, 401, origin);
+      if (email !== expectedEmail || !password || password !== env.ADMIN_PASSWORD) {
+        recordLoginFailure(request);
+        return json({ ok: false, error: "E-Mail oder Passwort stimmt nicht." }, 401, origin);
+      }
+      clearLoginFailures(request);
       const session = await issueSession(env);
       return json({ ok: true, token: session.token, expires: session.expires }, 200, origin);
     }
@@ -177,7 +204,9 @@ export default {
 
       const timestamp = Math.floor(Date.now() / 1000);
       const folder = "dinilove";
-      const paramsToSign = "folder=" + folder + "&timestamp=" + timestamp;
+      const allowed_formats = "jpg,png,webp,avif";
+      const max_file_size = 8388608;
+      const paramsToSign = "allowed_formats=" + allowed_formats + "&folder=" + folder + "&max_file_size=" + max_file_size + "&timestamp=" + timestamp;
       const signature = await sha1Hex(paramsToSign + env.CLOUDINARY_API_SECRET);
       return json({
         ok: true,
@@ -185,6 +214,8 @@ export default {
         apiKey: env.CLOUDINARY_API_KEY,
         timestamp,
         folder,
+        allowed_formats,
+        max_file_size,
         signature,
       }, 200, origin);
     }
