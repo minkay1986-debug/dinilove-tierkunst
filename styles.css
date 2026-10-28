@@ -41,3 +41,12 @@
 
 /* Dezenter Direktlink zur Admin-Anmeldung – ohne Hover-Text */
 .brand-home{display:flex;align-items:center;gap:11px;color:var(--ink);text-decoration:none}.admin-heart{display:inline-grid;place-items:center;width:24px;height:24px;margin-left:0;color:#c96b83;text-decoration:none;font-size:17px;line-height:1;border-radius:50%;transition:color .18s,transform .18s}.admin-heart:hover{color:#a94e67;transform:scale(1.08)}.admin-heart:focus-visible{outline:2px solid var(--olive);outline-offset:3px}
+
+
+/* Mobile hero: artwork stays straight and decorative note never covers it */
+@media(max-width:650px){
+  .art-frame{transform:none}
+  .hero-art{max-width:390px;padding-bottom:0}
+  .floating-note{position:relative;right:auto;bottom:auto;margin:14px 0 0 auto;width:max-content;max-width:100%;padding:10px 14px;font-size:12px;box-shadow:none}
+  .hero-side-label{display:none}
+}
