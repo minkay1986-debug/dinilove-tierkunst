@@ -135,10 +135,6 @@ export default {
 
     if (request.method === "POST" && url.pathname === "/admin/logout") return json({ ok: true }, 200, origin);
 
-    let authenticated = false;
-    try { authenticated = await verifySession(request, env); } catch { authenticated = false; }
-    if (!authenticated) return json({ ok: false, error: "Bitte anmelden." }, 401, origin);
-
     if (request.method === "GET" && url.pathname === "/public/gallery") {
       if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
         return json({ ok: false, error: "Galerie ist vorübergehend nicht verfügbar" }, 503, origin);
@@ -166,6 +162,10 @@ export default {
         }))
       }, 200, origin);
     }
+
+    let authenticated = false;
+    try { authenticated = await verifySession(request, env); } catch { authenticated = false; }
+    if (!authenticated) return json({ ok: false, error: "Bitte anmelden." }, 401, origin);
 
     if (request.method === "GET" && url.pathname === "/admin/assets") {
       if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
