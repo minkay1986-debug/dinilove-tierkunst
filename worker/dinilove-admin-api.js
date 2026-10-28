@@ -148,7 +148,7 @@ export default {
       const email = typeof body.email === "string" ? body.email.trim() : "";
       const message = typeof body.message === "string" ? body.message.trim() : "";
       const name = typeof body.name === "string" ? body.name.trim().slice(0, 100) : "";
-      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254) return json({ ok: false, error: "Bitte gib eine gültige E-Mail-Adresse an." }, 400, origin);
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return json({ ok: false, error: "Bitte gib eine gültige E-Mail-Adresse an." }, 400, origin);
       if (message.length < 5 || message.length > 5000) return json({ ok: false, error: "Die Nachricht muss zwischen 5 und 5000 Zeichen lang sein." }, 400, origin);
       const ip = request.headers.get("CF-Connecting-IP") || "unknown";
       const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip));
