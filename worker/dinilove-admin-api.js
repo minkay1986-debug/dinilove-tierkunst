@@ -150,7 +150,28 @@ export default {
         { headers: { authorization: auth, accept: "application/json" } }
       );
       if (!cloudinaryResponse.ok) {
-        return json({ ok: false, error: "Cloudinary-Galerie konnte nicht geladen werden" }, 502, origin);
+        let detail = "";
+        try {
+          const errorBody = await cloudinaryResponse.json();
+          const message = errorBody?.error?.message;
+          if (typeof message === "string") detail = message.slice(0, 240);
+        } catch {}
+        // Safe diagnostic only: never return credentials or authorization headers.
+        console.error("Cloudinary gallery request failed", {
+          status: cloudinaryResponse.status,
+          cloudNameConfigured: Boolean(env.CLOUDINARY_CLOUD_NAME),
+          apiKeyConfigured: Boolean(env.CLOUDINARY_API_KEY),
+          apiSecretConfigured: Boolean(env.CLOUDINARY_API_SECRET),
+          detail,
+        });
+        return json({
+          ok: false,
+          error: "Cloudinary-Galerie konnte nicht geladen werden",
+          diagnostic: {
+            status: cloudinaryResponse.status,
+            detail: detail || "Cloudinary hat keine lesbare Fehlerbeschreibung zurückgegeben",
+          },
+        }, 502, origin);
       }
       const data = await cloudinaryResponse.json();
       return json({
