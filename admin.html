@@ -140,7 +140,14 @@
           try { await api("/admin/message-status", { method: "POST", body: JSON.stringify({ id: item.id, status: item.status === "bearbeitet" ? "neu" : "bearbeitet" }) }); await loadMessages(); }
           catch (error) { notice("messagesNotice", error.message, true); mark.disabled = false; }
         });
-        actions.append(reply, mark);
+        const remove = document.createElement("button"); remove.className = "btn danger"; remove.type = "button"; remove.textContent = "Nachricht löschen";
+        remove.addEventListener("click", async () => {
+          if (!window.confirm("Diese Kontaktanfrage dauerhaft löschen? Das kann nicht rückgängig gemacht werden.")) return;
+          remove.disabled = true;
+          try { await api("/admin/delete-message", { method: "POST", body: JSON.stringify({ id: item.id }) }); await loadMessages(); notice("messagesNotice", "Kontaktanfrage wurde gelöscht."); }
+          catch (error) { notice("messagesNotice", error.message, true); remove.disabled = false; }
+        });
+        actions.append(reply, mark, remove);
         card.append(head, meta, body, actions);
         container.append(card);
       }
