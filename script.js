@@ -6,6 +6,27 @@ menuButton?.addEventListener('click', () => {
   menuButton.setAttribute('aria-label', isOpen ? 'Menü schließen' : 'Menü öffnen');
 });
 
+function openArtworkLightbox(url, altText) {
+  let modal = document.querySelector('.artwork-lightbox');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'artwork-lightbox';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Vergrößerte Tierzeichnung');
+    modal.innerHTML = '<button class="lightbox-close" type="button" aria-label="Bild schließen">×</button><div class="lightbox-stage"><img alt=""><span class="image-watermark" aria-hidden="true">DiniLove</span></div>';
+    document.body.append(modal);
+    modal.querySelector('.lightbox-close').addEventListener('click', () => modal.classList.remove('is-open'));
+    modal.addEventListener('click', event => { if (event.target === modal) modal.classList.remove('is-open'); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') modal.classList.remove('is-open'); });
+  }
+  const img = modal.querySelector('img');
+  img.src = url;
+  img.alt = altText || 'Tierkunst aus dem DiniLove-Atelier';
+  modal.classList.add('is-open');
+  modal.querySelector('.lightbox-close').focus();
+}
+
 async function loadPublicGallery() {
   const grid = document.querySelector('#gallery-grid');
   const count = document.querySelector('#gallery-count');
@@ -26,7 +47,7 @@ async function loadPublicGallery() {
       heroLink.target = '_blank';
       heroLink.rel = 'noopener noreferrer';
       heroLink.setAttribute('aria-label', 'Tierzeichnung mit DiniLove-Wasserzeichen');
-      heroLink.addEventListener('click', event => event.preventDefault());
+      heroLink.addEventListener('click', event => { event.preventDefault(); openArtworkLightbox(data.assets[0].url, 'Tierzeichnung aus dem DiniLove-Atelier'); });
       heroLink.style.display = 'block';
       const heroImage = document.createElement('img');
       heroImage.src = data.assets[0].url;
@@ -66,7 +87,7 @@ async function loadPublicGallery() {
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       link.setAttribute('aria-label', 'Tierzeichnung mit DiniLove-Wasserzeichen');
-      link.addEventListener('click', event => event.preventDefault());
+      link.addEventListener('click', event => { event.preventDefault(); openArtworkLightbox(asset.url, 'Tierzeichnung aus dem DiniLove-Atelier'); });
       const image = document.createElement('img');
       image.src = asset.url;
       image.alt = 'Originale Tierkunst aus dem DiniLove-Atelier';
