@@ -110,3 +110,34 @@ test("password login issues a session token and protects admin routes", async ()
   }), baseEnv);
   assert.equal(authenticated.status, 404);
 });
+
+
+test("login throttles repeated failures for the same client IP", async () => {
+  const ip = "198.51.100.77";
+  for (let i = 0; i < 5; i++) {
+    const response = await worker.fetch(new Request("https://api.example/admin/login", {
+      method: "POST",
+      headers: { Origin: origin, "Content-Type": "application/json", "CF-Connecting-IP": ip },
+      body: JSON.stringify({ email: "nadine_geller@hotmail.de", password: "wrong" }),
+    }), baseEnv);
+    assert.equal(response.status, 401);
+  }
+  const blocked = await worker.fetch(new Request("https://api.example/admin/login", {
+    method: "POST",
+    headers: { Origin: origin, "Content-Type": "application/json", "CF-Connecting-IP": ip },
+    body: JSON.stringify({ email: "nadine_geller@hotmail.de", password: "wrong" }),
+  }), baseEnv);
+  assert.equal(blocked.status, 429);
+});
+
+test("successful login session expires within one hour", async () => {
+  const response = await worker.fetch(new Request("https://api.example/admin/login", {
+    method: "POST",
+    headers: { Origin: origin, "Content-Type": "application/json", "CF-Connecting-IP": "198.51.100.78" },
+    body: JSON.stringify({ email: "nadine_geller@hotmail.de", password: "test-only-password" }),
+  }), baseEnv);
+  assert.equal(response.status, 200);
+  const session = await response.json();
+  assert.ok(session.expires <= Math.floor(Date.now() / 1000) + 3600);
+  assert.ok(session.expires > Math.floor(Date.now() / 1000));
+});
