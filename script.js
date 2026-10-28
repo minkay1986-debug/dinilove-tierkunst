@@ -90,4 +90,37 @@ async function loadPublicGallery() {
     grid.append(error);
   }
 }
+const contactForm = document.querySelector('#contact-form');
+contactForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = document.querySelector('#contact-submit');
+  const result = document.querySelector('#contact-result');
+  button.disabled = true;
+  button.textContent = 'Wird gesendet …';
+  result.textContent = '';
+  result.classList.remove('is-error');
+  try {
+    const formData = new FormData(contactForm);
+    const response = await fetch('https://dinilove-admin-api-v2.minkay1986.workers.dev/public/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        name: String(formData.get('name') || '').trim(),
+        email: String(formData.get('email') || '').trim(),
+        message: String(formData.get('message') || '').trim()
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) throw new Error(data.error || 'Die Nachricht konnte nicht gesendet werden.');
+    contactForm.reset();
+    result.textContent = 'Danke! Deine Nachricht wurde übermittelt.';
+  } catch (error) {
+    result.textContent = error.message || 'Das Senden hat leider nicht geklappt. Bitte versuche es später erneut.';
+    result.classList.add('is-error');
+  } finally {
+    button.disabled = false;
+    button.innerHTML = 'Nachricht senden <span aria-hidden="true">↗</span>';
+  }
+});
+
 loadPublicGallery();
