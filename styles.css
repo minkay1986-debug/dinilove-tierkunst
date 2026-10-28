@@ -52,10 +52,10 @@
 }
 
 
-/* Natürliche, kristalline Schneeflocken – neutral winterweiß, nicht rosé */
-.snowflake{color:#8b8d87!important;text-shadow:0 1px 0 #ffffff,0 0 5px #ffffffaa;display:inline-block;line-height:1;font-family:Georgia,serif}
+/* Eiskristall-Schneeflocken: kühles Eisblau mit klaren Lichtreflexen */
+.snowflake{color:#a8e5f5!important;text-shadow:0 0 1px #ffffff,0 0 4px #dffaff,0 0 8px #a8e5f588;display:inline-block;line-height:1;font-family:Georgia,serif;-webkit-text-stroke:.25px #eafcff}
 .note-star.snowflake{font-size:26px}
-.placeholder-icon.snowflake{font-size:36px;color:#8b8d87!important}
+.placeholder-icon.snowflake{font-size:36px;color:#a8e5f5!important}
 .tiny-sun.snowflake{font-size:25px}
 .intro-strip i.snowflake{font-size:16px}
 .atelier-signature .snowflake{font-size:18px;margin-left:10px}
