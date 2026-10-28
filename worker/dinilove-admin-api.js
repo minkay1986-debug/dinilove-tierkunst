@@ -203,6 +203,19 @@ export default {
       return json({ ok: true, messages }, 200, origin);
     }
 
+    if (request.method === "POST" && url.pathname === "/admin/delete-message") {
+      if (!env.DINILOVE_MESSAGES) return json({ ok: false, error: "Nachrichtenspeicher ist nicht konfiguriert" }, 503, origin);
+      let body;
+      try { body = await request.json(); } catch { return json({ ok: false, error: "Ungültige Anfrage" }, 400, origin); }
+      const id = typeof body.id === "string" ? body.id : "";
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ ok: false, error: "Ungültige Nachrichten-ID" }, 400, origin);
+      const key = "message:" + id;
+      const raw = await env.DINILOVE_MESSAGES.get(key);
+      if (!raw) return json({ ok: false, error: "Nachricht nicht gefunden" }, 404, origin);
+      await env.DINILOVE_MESSAGES.delete(key);
+      return json({ ok: true }, 200, origin);
+    }
+
     if (request.method === "POST" && url.pathname === "/admin/message-status") {
       if (!env.DINILOVE_MESSAGES) return json({ ok: false, error: "Nachrichtenspeicher ist nicht konfiguriert" }, 503, origin);
       let body;
