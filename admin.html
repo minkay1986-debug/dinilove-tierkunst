@@ -49,7 +49,10 @@
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) {
       if (response.status === 401 || response.status === 403) throw new Error("Anmeldung fehlt oder ist abgelaufen. Bitte erneut anmelden.");
-      throw new Error(data.error || "Die Anfrage ist fehlgeschlagen (" + response.status + ").");
+      const diagnostic = data.diagnostic;
+      const detail = diagnostic && typeof diagnostic.detail === "string" ? diagnostic.detail.slice(0, 240) : "";
+      const status = diagnostic && Number.isInteger(diagnostic.status) ? "Cloudinary HTTP " + diagnostic.status : "HTTP " + response.status;
+      throw new Error((data.error || "Die Anfrage ist fehlgeschlagen") + " (" + status + (detail ? ": " + detail : "") + ").");
     }
     return data;
   }
