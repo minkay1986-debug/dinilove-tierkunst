@@ -86,9 +86,16 @@
     } catch (error) {
       gallery.innerHTML = '<div class="empty">Die geschützte Galerie konnte nicht geladen werden.</div>';
       notice("galleryNotice", error.message, true);
-      authText.textContent = "Anmeldung erforderlich";
-      sessionStorage.removeItem("dinilove_admin_token");
-      $("loginPanel").hidden = false; $("adminGrid").hidden = true; $("logoutButton").hidden = true;
+      const authFailure = error.message.startsWith("Anmeldung fehlt oder ist abgelaufen.");
+      if (authFailure) {
+        authText.textContent = "Anmeldung erforderlich";
+        sessionStorage.removeItem("dinilove_admin_token");
+        $("loginPanel").hidden = false; $("adminGrid").hidden = true; $("logoutButton").hidden = true;
+      } else {
+        // A Cloudinary/API failure must not invalidate an otherwise valid admin session.
+        authText.textContent = "Angemeldet";
+        $("loginPanel").hidden = true; $("adminGrid").hidden = false; $("logoutButton").hidden = false;
+      }
     }
   }
   $("uploadForm").addEventListener("submit", async (event) => {
