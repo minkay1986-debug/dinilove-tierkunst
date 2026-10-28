@@ -63,8 +63,8 @@
 
 /* Halbtransparentes DiniLove-Wasserzeichen über öffentlichen Zeichnungen */
 .public-work-image,.hero-art .art-frame a{position:relative}
-.image-watermark{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-24deg);font-family:var(--serif);font-size:clamp(24px,4vw,42px);font-style:italic;font-weight:600;letter-spacing:.08em;color:rgba(255,255,255,.48);-webkit-text-stroke:.45px rgba(60,58,52,.28);text-shadow:0 1px 2px rgba(25,25,22,.22);white-space:nowrap;pointer-events:none;user-select:none}
-.hero-art .image-watermark{font-size:clamp(30px,4.5vw,48px);color:rgba(255,255,255,.45)}
+.image-watermark{position:absolute;z-index:3;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-24deg);font-family:var(--serif);font-size:clamp(24px,4vw,42px);font-style:italic;font-weight:600;letter-spacing:.08em;color:rgba(255,255,255,.28);-webkit-text-stroke:.25px rgba(60,58,52,.16);text-shadow:0 1px 2px rgba(25,25,22,.12);white-space:nowrap;pointer-events:none;user-select:none}
+.hero-art .image-watermark{font-size:clamp(30px,4.5vw,48px);color:rgba(255,255,255,.28)}
 .public-work-image img,.hero-art .art-frame a img{-webkit-user-drag:none;user-select:none}
 @media(max-width:650px){.image-watermark{font-size:clamp(24px,6vw,34px)}}
 
@@ -74,6 +74,6 @@
 .artwork-lightbox.is-open{display:flex}
 .lightbox-stage{position:relative;display:flex;align-items:center;justify-content:center;max-width:min(94vw,1100px);max-height:calc(100vh - 80px);width:auto;height:auto}
 .lightbox-stage img{display:block;max-width:94vw;max-height:calc(100vh - 90px);width:auto;height:auto;object-fit:contain;user-select:none;-webkit-user-drag:none}
-.artwork-lightbox .image-watermark{font-size:clamp(30px,5vw,64px);color:rgba(255,255,255,.48)}
+.artwork-lightbox .image-watermark{font-size:clamp(30px,5vw,64px);color:rgba(255,255,255,.28)}
 .lightbox-close{position:absolute;top:12px;right:18px;border:1px solid rgba(255,255,255,.45);border-radius:50%;width:42px;height:42px;background:rgba(255,255,255,.1);color:white;font-size:30px;line-height:1;cursor:pointer;z-index:2}
 @media(max-width:650px){.artwork-lightbox{padding:58px 8px 16px}.lightbox-stage{max-width:100%;max-height:calc(100vh - 82px)}.lightbox-stage img{max-width:100%;max-height:calc(100vh - 90px)}.lightbox-close{top:9px;right:10px}}
