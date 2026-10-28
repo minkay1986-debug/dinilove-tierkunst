@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "worker/dinilove-admin-api.js"
+      - "wrangler.toml"
       - ".github/workflows/deploy-dinilove-admin-api.yml"
 
 permissions:
@@ -30,4 +31,4 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: c82c28a3a236dd43abb220b8aee3a8b3
         run: |
           test -n "$CLOUDFLARE_API_TOKEN" || (echo "::error::Missing repository secret CLOUDFLARE_API_TOKEN"; exit 1)
-          wrangler deploy worker/dinilove-admin-api.js --name dinilove-admin-api-v2 --compatibility-date 2026-10-28
+          wrangler deploy --config wrangler.toml
