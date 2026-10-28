@@ -26,6 +26,12 @@
 <section class="panel" aria-labelledby="uploadTitle"><h2 id="uploadTitle">Neues Werk</h2><p class="muted">Wähle eine Bilddatei. Das Original wird direkt zu Cloudinary übertragen; dein geheimes API-Passwort bleibt auf dem Server.</p>
 <form id="uploadForm"><label class="field"><span for="imageFile">Bilddatei</span><input id="imageFile" name="file" type="file" accept="image/jpeg,image/png,image/webp,image/avif" required></label><p class="hint">Erlaubt: JPG, PNG, WebP oder AVIF. Bitte nur Bilder hochladen, die veröffentlicht werden dürfen.</p><div class="actions"><button class="btn" id="uploadButton" type="submit">Bild hochladen</button><button class="btn secondary" id="clearButton" type="button">Auswahl leeren</button></div></form><div class="notice" id="uploadNotice" role="status" aria-live="polite"></div><div class="foot">Testzugang für Nadine. Nach dem Test kann das Passwort serverseitig geändert werden.</div></section>
 <section class="panel" aria-labelledby="galleryTitle"><div class="gallery-head"><div><h2 id="galleryTitle">Deine Werke</h2><p class="muted">Bilder aus dem Ordner „dinilove“.</p></div><button class="btn secondary" id="refreshButton" type="button">Galerie aktualisieren</button></div><div class="notice" id="galleryNotice" role="status" aria-live="polite"></div><div class="gallery" id="gallery"><div class="empty">Die Galerie wird geladen …</div></div></section>
+<section class="panel" aria-labelledby="messagesTitle" style="grid-column:1/-1">
+  <div class="gallery-head"><div><h2 id="messagesTitle">Kontaktanfragen</h2><p class="muted">Eingehende Nachrichten. Du entscheidest selbst, ob du antworten möchtest.</p></div><button class="btn secondary" id="refreshMessagesButton" type="button">Nachrichten aktualisieren</button></div>
+  <div class="notice" id="messagesNotice" role="status" aria-live="polite"></div>
+  <div id="messagesList" style="display:grid;gap:12px;margin-top:16px"><div class="empty">Nachrichten werden geladen …</div></div>
+  <p class="hint">Nachrichten werden aus Datenschutzgründen nach 90 Tagen automatisch gelöscht.</p>
+</section>
 </div>
 <p class="foot">Admin-Testoberfläche. Änderungen an Bildern wirken auf Cloudinary-Inhalte. Diese Seite ist im Testzweig erstellt und nicht auf der Live-Website veröffentlicht. <button class="btn secondary" id="logoutButton" type="button">Abmelden</button></p>
 </main>
@@ -83,6 +89,7 @@
         });
         body.append(name, meta, del); card.append(preview, body); gallery.append(card);
       }
+      await loadMessages();
     } catch (error) {
       gallery.innerHTML = '<div class="empty">Die geschützte Galerie konnte nicht geladen werden.</div>';
       notice("galleryNotice", error.message, true);
@@ -96,6 +103,51 @@
         authText.textContent = "Angemeldet";
         $("loginPanel").hidden = true; $("adminGrid").hidden = false; $("logoutButton").hidden = false;
       }
+    }
+  }
+  async function loadMessages() {
+    const container = $("messagesList");
+    if (!container || $("adminGrid").hidden) return;
+    container.replaceChildren();
+    try {
+      const data = await api("/admin/messages");
+      if (!data.messages.length) {
+        const empty = document.createElement("div"); empty.className = "empty"; empty.textContent = "Noch keine Kontaktanfragen vorhanden."; container.append(empty); return;
+      }
+      for (const item of data.messages) {
+        const card = document.createElement("article");
+        card.style.cssText = "border:1px solid var(--line);background:#fff;padding:16px;min-width:0";
+        const head = document.createElement("div");
+        head.style.cssText = "display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap";
+        const title = document.createElement("strong");
+        title.textContent = item.name || "Kontaktanfrage";
+        const status = document.createElement("span");
+        status.className = "status";
+        status.textContent = item.status === "bearbeitet" ? "Bearbeitet" : "Neu";
+        head.append(title, status);
+        const meta = document.createElement("p");
+        meta.className = "asset-meta";
+        const date = item.createdAt ? new Date(item.createdAt).toLocaleString("de-DE") : "";
+        meta.textContent = item.email + (date ? " · " + date : "");
+        const body = document.createElement("p");
+        body.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;margin:12px 0";
+        body.textContent = item.message;
+        const actions = document.createElement("div"); actions.className = "actions";
+        const reply = document.createElement("a"); reply.className = "btn"; reply.href = "mailto:" + encodeURIComponent(item.email) + "?subject=" + encodeURIComponent("Deine Anfrage zu DiniLove"); reply.textContent = "Per E-Mail antworten";
+        const mark = document.createElement("button"); mark.className = "btn secondary"; mark.type = "button"; mark.textContent = item.status === "bearbeitet" ? "Als neu markieren" : "Als bearbeitet markieren";
+        mark.addEventListener("click", async () => {
+          mark.disabled = true;
+          try { await api("/admin/message-status", { method: "POST", body: JSON.stringify({ id: item.id, status: item.status === "bearbeitet" ? "neu" : "bearbeitet" }) }); await loadMessages(); }
+          catch (error) { notice("messagesNotice", error.message, true); mark.disabled = false; }
+        });
+        actions.append(reply, mark);
+        card.append(head, meta, body, actions);
+        container.append(card);
+      }
+    } catch (error) {
+      container.replaceChildren();
+      const empty = document.createElement("div"); empty.className = "empty"; empty.textContent = "Kontaktanfragen konnten nicht geladen werden."; container.append(empty);
+      notice("messagesNotice", error.message, true);
     }
   }
   $("uploadForm").addEventListener("submit", async (event) => {
@@ -132,6 +184,7 @@
   $("logoutButton").addEventListener("click", () => { sessionStorage.removeItem("dinilove_admin_token"); $("adminGrid").hidden = true; $("loginPanel").hidden = false; authText.textContent = "Abgemeldet"; gallery.replaceChildren(); });
   $("clearButton").addEventListener("click", () => $("uploadForm").reset());
   $("refreshButton").addEventListener("click", loadGallery);
+  $("refreshMessagesButton").addEventListener("click", loadMessages);
   $("logoutButton").hidden = true;
   if (sessionStorage.getItem("dinilove_admin_token")) loadGallery();
   else { $("loginPanel").hidden = false; $("adminGrid").hidden = true; authText.textContent = "Anmeldung erforderlich"; }
