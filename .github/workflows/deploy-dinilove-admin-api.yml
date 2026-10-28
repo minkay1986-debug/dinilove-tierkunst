@@ -1,0 +1,33 @@
+name: Deploy DiniLove Admin API
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "worker/dinilove-admin-api.js"
+      - ".github/workflows/deploy-dinilove-admin-api.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dinilove-admin-api-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global wrangler@4
+      - name: Deploy Worker while preserving Worker secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: c82c28a3a236dd43abb220b8aee3a8b3
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" || (echo "::error::Missing repository secret CLOUDFLARE_API_TOKEN"; exit 1)
+          wrangler deploy worker/dinilove-admin-api.js --name dinilove-admin-api-v2 --compatibility-date 2026-10-28
