@@ -227,7 +227,7 @@ export default {
       const folder = "dinilove";
       const allowed_formats = "jpg,png,webp,avif";
       const max_file_size = 8388608;
-      const paramsToSign = "allowed_formats=" + allowed_formats + "&folder=" + folder + "&max_file_size=" + max_file_size + "&timestamp=" + timestamp;
+      const paramsToSign = "allowed_formats=" + allowed_formats + "&folder=" + folder + "&timestamp=" + timestamp;
       const signature = await sha1Hex(paramsToSign + env.CLOUDINARY_API_SECRET);
       return json({
         ok: true,
