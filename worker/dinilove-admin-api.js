@@ -112,29 +112,6 @@ export default {
       return json({ ok: true, service: "dinilove-admin-api" }, 200, origin);
     }
 
-    if (!ALLOWED_ORIGINS.has(origin)) {
-      return json({ ok: false, error: "Origin nicht erlaubt" }, 403);
-    }
-
-    if (request.method === "POST" && url.pathname === "/admin/login") {
-      if (!env.ADMIN_PASSWORD || !env.ADMIN_SESSION_SECRET) return json({ ok: false, error: "Login ist serverseitig noch nicht konfiguriert" }, 503, origin);
-      if (loginBlocked(request)) return json({ ok: false, error: "Zu viele Anmeldeversuche. Bitte in 10 Minuten erneut versuchen." }, 429, origin);
-      let body;
-      try { body = await request.json(); } catch { return json({ ok: false, error: "Ungültige Anfrage" }, 400, origin); }
-      const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-      const password = typeof body.password === "string" ? body.password : "";
-      const expectedEmail = (env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
-      if (email !== expectedEmail || !password || password !== env.ADMIN_PASSWORD) {
-        recordLoginFailure(request);
-        return json({ ok: false, error: "E-Mail oder Passwort stimmt nicht." }, 401, origin);
-      }
-      clearLoginFailures(request);
-      const session = await issueSession(env);
-      return json({ ok: true, token: session.token, expires: session.expires }, 200, origin);
-    }
-
-    if (request.method === "POST" && url.pathname === "/admin/logout") return json({ ok: true }, 200, origin);
-
     if (request.method === "GET" && url.pathname === "/public/gallery") {
       if (!env.CLOUDINARY_CLOUD_NAME || !env.CLOUDINARY_API_KEY || !env.CLOUDINARY_API_SECRET) {
         return json({ ok: false, error: "Galerie ist vorübergehend nicht verfügbar" }, 503, origin);
@@ -162,6 +139,29 @@ export default {
         }))
       }, 200, origin);
     }
+
+    if (!ALLOWED_ORIGINS.has(origin)) {
+      return json({ ok: false, error: "Origin nicht erlaubt" }, 403);
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin/login") {
+      if (!env.ADMIN_PASSWORD || !env.ADMIN_SESSION_SECRET) return json({ ok: false, error: "Login ist serverseitig noch nicht konfiguriert" }, 503, origin);
+      if (loginBlocked(request)) return json({ ok: false, error: "Zu viele Anmeldeversuche. Bitte in 10 Minuten erneut versuchen." }, 429, origin);
+      let body;
+      try { body = await request.json(); } catch { return json({ ok: false, error: "Ungültige Anfrage" }, 400, origin); }
+      const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+      const password = typeof body.password === "string" ? body.password : "";
+      const expectedEmail = (env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
+      if (email !== expectedEmail || !password || password !== env.ADMIN_PASSWORD) {
+        recordLoginFailure(request);
+        return json({ ok: false, error: "E-Mail oder Passwort stimmt nicht." }, 401, origin);
+      }
+      clearLoginFailures(request);
+      const session = await issueSession(env);
+      return json({ ok: true, token: session.token, expires: session.expires }, 200, origin);
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin/logout") return json({ ok: true }, 200, origin);
 
     let authenticated = false;
     try { authenticated = await verifySession(request, env); } catch { authenticated = false; }
